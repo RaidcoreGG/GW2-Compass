@@ -1,4 +1,3 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
 #pragma comment(lib, "winmm.lib")
 #include <stdint.h>
 #include <stdio.h>
@@ -8,18 +7,6 @@
 #include "imgui\imgui.h"
 #include <string>
 #include "mumble.h"
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
-{
-    switch (ul_reason_for_call)
-    {
-		case DLL_PROCESS_ATTACH: break;
-		case DLL_PROCESS_DETACH: break;
-		case DLL_THREAD_ATTACH: break;
-		case DLL_THREAD_DETACH: break;
-    }
-    return TRUE;
-}
 
 /* proto */
 extern "C" __declspec(dllexport) void* get_init_addr(char* arcversion, ImGuiContext* imguictx, IDirect3DDevice9* id3dd9, HANDLE arcdll, void* mallocfn, void* freefn);
@@ -41,9 +28,9 @@ IDirect3DDevice9* d3d9device;
 void* filelog;
 void* arclog;
 
-bool show_mumble = false;
-bool show_compass_strip = false;
-bool show_compass_world = false;
+bool enable_compass = false;
+bool enable_compass_strip = false;
+bool enable_compass_character = false;
 LinkedMem* p_Mumble = nullptr;
 
 /* log to arcdps.log and log window*/
@@ -91,11 +78,11 @@ arcdps_exports* mod_init()
 {
 	/* for arcdps */
 	memset(&arc_exports, 0, sizeof(arc_exports));
-	arc_exports.sig = 0x2B5EC1B9;
+	arc_exports.sig = 0xC8028A2E;
 	arc_exports.imguivers = IMGUI_VERSION_NUM;
 	arc_exports.size = sizeof(arc_exports);
 	arc_exports.out_name = "Compass";
-	arc_exports.out_build = "2021-06-26";
+	arc_exports.out_build = "2021-06-24";
 	arc_exports.imgui = mod_imgui;
 	//arc_exports.options_end = mod_options;
 	arc_exports.options_windows = mod_options_windows;
@@ -115,7 +102,7 @@ uintptr_t mod_release()
 
 uintptr_t mod_imgui(uint32_t not_charsel_or_loading)
 {
-	if (show_mumble)
+	if (enable_compass)
 	{
 		char buffer[4096];
 		char* p = &buffer[0];
@@ -216,7 +203,7 @@ uintptr_t mod_imgui(uint32_t not_charsel_or_loading)
 		p += _snprintf_s(p, 400, _TRUNCATE, "%-010s %u\n", "pid", p_Mumble->processId);
 
 		//ImGui::ShowDemoWindow();
-		ImGui::Begin("== MUMBLE ==", 0, 99);
+		ImGui::Begin("== DEBUG ==", 0, 99);
 		ImGui::Text(buffer);
 		ImGui::End();
 	}
@@ -226,7 +213,7 @@ uintptr_t mod_imgui(uint32_t not_charsel_or_loading)
 
 uintptr_t mod_options()
 {
-	ImGui::Checkbox("Mumble", &show_mumble);
+	ImGui::Checkbox("Compass", &enable_compass);
 	return 0;
 }
 
