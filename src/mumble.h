@@ -1,43 +1,8 @@
 #pragma once
 #include <D3D9.h>
 #include <d3d9types.h>
-
-enum EMapType : unsigned
-{
-	AutoRedirect = 0,
-	CharacterCreation = 1,
-	PvP = 2,
-	GvG = 3,
-	Instance = 4,
-	PvE = 5,
-	Tournament = 6,
-	Tutorial = 7,
-	UserTournament = 8,
-	WvW_EBG = 9,
-	WvW_BBL = 10,
-	WvW_GBL = 11,
-	WvW_RBL = 12,
-	WVW_REWARD = 13,            // SCRAPPED
-	WvW_ObsidianSanctum = 14,
-	WvW_EdgeOfTheMists = 15,
-	PvE_Mini = 16,
-	BIG_BATTLE = 17,            // SCRAPPED
-	WvW_Lounge = 18,
-	WvW = 19
-};
-
-enum EMounts : unsigned char
-{
-	Unmounted = 0x00,
-	Jackal = 0x01,
-	Griffon = 0x02,
-	Springer = 0x03,
-	Skimmer = 0x04,
-	Raptor = 0x05,
-	RollerBeetle = 0x06,
-	Warclaw = 0x07,
-	Skyscale = 0x08
-};
+#include <map>
+#include <string>
 
 typedef struct LinkedMem
 {
@@ -54,21 +19,18 @@ typedef struct LinkedMem
 	unsigned context_len;
 	unsigned char serverAddress[28]; // contains sockaddr_in or sockaddr_in6
 	unsigned mapId;
-	EMapType mapType;
+	unsigned mapType;
 	unsigned shardId;
 	unsigned instance;
 	unsigned buildId;
-	byte IsMapOpen : 1;
-	byte IsCompassTopRight : 1;
-	byte IsCompassRotating : 1;
-	byte IsGameFocused : 1;
-	byte IsCompetitive : 1;
-	byte IsTextboxFocused : 1;
-	byte IsInCombat : 1;
-	byte UNUSED1 : 1;
-	byte UNUSED2;
-	byte UNUSED3;
-	byte UNUSED4;
+	unsigned IsMapOpen : 1;
+	unsigned IsCompassTopRight : 1;
+	unsigned IsCompassRotating : 1;
+	unsigned IsGameFocused : 1;
+	unsigned IsCompetitive : 1;
+	unsigned IsTextboxFocused : 1;
+	unsigned IsInCombat : 1;
+	unsigned UNUSED1 : 1;
 	unsigned short compassWidth; // pixels
 	unsigned short compassHeight; // pixels
 	float compassRotation; // radians
@@ -78,7 +40,7 @@ typedef struct LinkedMem
 	float mapCenterY; // continentCoords
 	float mapScale;
 	unsigned processId;
-	EMounts mountIndex;
+	unsigned char mountIndex;
 	wchar_t description[2048];
 } LinkedMem;
 

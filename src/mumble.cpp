@@ -1,7 +1,4 @@
 #include "mumble.h"
-#include <Windows.h>
-#include <string>
-#include <math.h>
 
 static HANDLE hMumble = nullptr;
 extern LinkedMem* p_Mem = nullptr;
@@ -49,8 +46,10 @@ std::wstring get_mumble_name()
 
 	size_t index = commandLine.find(command, 0);
 
-	if (index != std::wstring::npos) {
-		if (index + command.length() < commandLine.length()) {
+	if (index != std::wstring::npos)
+	{
+		if (index + command.length() < commandLine.length())
+		{
 			auto const start = index + command.length() + 1;
 			auto const end = commandLine.find(' ', start);
 			std::wstring mumble = commandLine.substr(start, (end != std::wstring::npos ? end : commandLine.length()) - start);
