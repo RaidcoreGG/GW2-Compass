@@ -139,7 +139,7 @@ uintptr_t mod_imgui(uint32_t not_charsel_or_loading)
 		{
 			p += _snprintf_s(p, 400, _TRUNCATE, "%-010s %s\n", "cmprot", "disabled");
 		}
-		float camrotdeg = std::atan2(p_Mumble->cam_front.x, p_Mumble->cam_front.z) * 180 / 3.14159265f; // gets the rotation in degrees; north = 0, clock-wise to 360
+		float camrotdeg = atan2f(p_Mumble->cam_front.x, p_Mumble->cam_front.z) * 180 / 3.14159265f; // gets the rotation in degrees; north = 0, clock-wise to 360
 		if (camrotdeg < 0) { camrotdeg += 360; }
 		p += _snprintf_s(p, 400, _TRUNCATE, "%-010s %09.4f\n", "mapx", p_Mumble->mapCenterX);
 		p += _snprintf_s(p, 400, _TRUNCATE, "%-010s %09.4f\n", "mapy", p_Mumble->mapCenterY);
