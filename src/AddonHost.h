@@ -78,20 +78,18 @@ class ILogger
 };
 
 typedef void (*LOGGER_LOGA)(ELogLevel aLogLevel, const char* aFmt, ...);
-typedef void (*LOGGER_LOGW)(ELogLevel aLogLevel, const wchar_t* aFmt, ...);
 typedef void (*LOGGER_ADDREM)(ILogger* aLogger);
 
 struct VTableLogging
 {
 	LOGGER_LOGA			LogA;
-	LOGGER_LOGW			LogW;
 	LOGGER_ADDREM		RegisterLogger;
 	LOGGER_ADDREM		UnregisterLogger;
 };
 
 typedef void (*EVENTS_CONSUME)(void* aEventArgs);
-typedef void (*EVENTS_RAISE)(const wchar_t* aEventName, void* aEventData);
-typedef void (*EVENTS_SUBSCRIBE)(const wchar_t* aEventName, EVENTS_CONSUME aConsumeEventCallback);
+typedef void (*EVENTS_RAISE)(std::string aEventName, void* aEventData);
+typedef void (*EVENTS_SUBSCRIBE)(std::string aEventName, EVENTS_CONSUME aConsumeEventCallback);
 
 struct Keybind
 {
@@ -101,15 +99,17 @@ struct Keybind
 	bool Shift;
 };
 
-typedef void (*KEYBINDS_PROCESS)(const wchar_t* aIdentifier);
-typedef void (*KEYBINDS_REGISTER)(const wchar_t* aIdentifier, KEYBINDS_PROCESS aKeybindHandler, Keybind aKeybind);
-typedef void (*KEYBINDS_UNREGISTER)(const wchar_t* aIdentifier);
+typedef void (*KEYBINDS_PROCESS)(std::string aIdentifier);
+typedef void (*KEYBINDS_REGISTER)(std::string aIdentifier, KEYBINDS_PROCESS aKeybindHandler, std::string aKeybind);
+typedef void (*KEYBINDS_UNREGISTER)(std::string aIdentifier);
 
 struct AddonAPI
 {
-	IDXGISwapChain* SwapChain;
-	ImGuiContext* ImguiContext;
-	LinkedMem* MumbleLink;
+	IDXGISwapChain*		SwapChain;
+	ImGuiContext*		ImguiContext;
+	LinkedMem*			MumbleLink;
+	unsigned*			WindowWidth;
+	unsigned*			WindowHeight;
 
 	VTableMinhook		MinhookFunctions;
 	VTableLogging		LoggingFunctions;
@@ -117,6 +117,7 @@ struct AddonAPI
 	/* Events */
 	EVENTS_RAISE		RaiseEvent;
 	EVENTS_SUBSCRIBE	SubscribeEvent;
+	EVENTS_SUBSCRIBE	UnsubscribeEvent;
 
 	/* Keybinds */
 	KEYBINDS_REGISTER	RegisterKeybind;
@@ -144,10 +145,10 @@ typedef void (*ADDON_OPTIONS)();
 struct AddonDefinition
 {
     signed int      Signature;      /* Raidcore Addon ID, set to random negative integer if not on Raidcore */
-    const wchar_t*  Name;           /* Name of the addon as shown in the library */
-    const wchar_t*  Version;        /* Leave as `__DATE__ L" " __TIME__` to maintain consistency */
-    const wchar_t*  Author;         /* Author of the addon */
-    const wchar_t*  Description;    /* Short description */
+    const char*		Name;           /* Name of the addon as shown in the library */
+    const char*		Version;        /* Leave as `__DATE__ L" " __TIME__` to maintain consistency */
+    const char*		Author;         /* Author of the addon */
+    const char*		Description;    /* Short description */
     ADDON_LOAD      Load;           /* Pointer to Load Function of the addon */
     ADDON_UNLOAD    Unload;         /* Pointer to Unload Function of the addon */
 
@@ -155,7 +156,7 @@ struct AddonDefinition
     ADDON_OPTIONS   Options;        /* Options window callback, called when opening options for this addon */
 
     EUpdateProvider Provider;       /* What platform is the the addon hosted on */
-    const wchar_t*  UpdateLink;     /* Link to the update resource */
+    const char*		UpdateLink;     /* Link to the update resource */
 };
 
 #endif

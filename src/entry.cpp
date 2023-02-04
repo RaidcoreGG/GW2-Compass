@@ -4,6 +4,7 @@
 
 #include "AddonHost.h"
 #include "imgui\imgui.h"
+#include "imgui\imgui_extensions.h"
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -24,23 +25,32 @@ bool IsCompassStripVisible = false;
 bool IsWorldCompassVisible = false;
 LinkedMem* MumbleLink = nullptr;
 
-void ProcessKeybind(const wchar_t* aIdentifier)
+float widgetWidth = 600.0f;
+float range = 180.0f;
+float step = 15.0f;
+float centerX = widgetWidth / 2;
+float offsetPerDegree = widgetWidth / range;
+
+ImVec2 CompassStripPosition = ImVec2(0,0);
+
+void ProcessKeybind(std::string aIdentifier)
 {
 	/* if COMPASS_TOGGLEVIS is passed, we toggle the compass visibility */
-	if (wcscmp(aIdentifier, L"COMPASS_TOGGLEVIS") == 0)
+	if (aIdentifier == "COMPASS_TOGGLEVIS")
 	{
 		IsCompassStripVisible = !IsCompassStripVisible;
 		return;
 	}
 }
 
-void SetupKeybinds()
+void OnWindowResized(void* aEventArgs)
 {
-	Keybind ctrlC{};
-	ctrlC.Ctrl = true;
-	ctrlC.Key = 67;
-	APIDefs.RegisterKeybind(L"COMPASS_TOGGLEVIS", ProcessKeybind, ctrlC);
+	/* event args are nullptr, ignore */
+	CompassStripPosition = ImVec2((*APIDefs.WindowWidth - widgetWidth) / 2, *APIDefs.WindowHeight * .2f);
 }
+
+const char* COMPASS_TOGGLEVIS =	"COMPASS_TOGGLEVIS";
+const char* WINDOW_RESIZED =	"WINDOW_RESIZED";
 
 void AddonLoad(AddonAPI aHostApi)
 {
@@ -50,13 +60,22 @@ void AddonLoad(AddonAPI aHostApi)
 
 	MumbleLink = APIDefs.MumbleLink;
 
-	SetupKeybinds();
+	/* set keybinds */
+	APIDefs.RegisterKeybind(COMPASS_TOGGLEVIS, ProcessKeybind, "CTRL+C");
+
+	/* set events */
+	APIDefs.SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
+
+	OnWindowResized(nullptr);
 }
 
 void AddonUnload()
 {
-	APIDefs.UnregisterKeybind(L"COMPASS_TOGGLEVIS");
-	/* free some resources */
+	/* release keybinds */
+	APIDefs.UnregisterKeybind(COMPASS_TOGGLEVIS);
+
+	/* release events */
+	APIDefs.UnsubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 }
 
 std::string GetMarkerText(int aRotation, bool notch = true)
@@ -67,34 +86,29 @@ std::string GetMarkerText(int aRotation, bool notch = true)
 
     std::string marker;
 
-	switch (aRotation)
-	{
-		case   0: marker.append("N"); break;
-		case  45: marker.append("NE"); break;
-		case  90: marker.append("E"); break;
-		case 135: marker.append("SE"); break;
-		case 180: marker.append("S"); break;
-		case 225: marker.append("SW"); break;
-		case 270: marker.append("W"); break;
-		case 315: marker.append("NW"); break;
-		default:  marker.append(notch ? "|" : std::to_string(aRotation)); break;
-	}
+	if (aRotation > 355 || aRotation < 5) { marker.append("N"); }
+	else if (aRotation > 40 && aRotation < 50) { marker.append("NE"); }
+	else if (aRotation > 85 && aRotation < 95) { marker.append("E"); }
+	else if (aRotation > 130 && aRotation < 140) { marker.append("SE"); }
+	else if (aRotation > 175 && aRotation < 185) { marker.append("S"); }
+	else if (aRotation > 220 && aRotation < 230) { marker.append("SW"); }
+	else if (aRotation > 265 && aRotation < 275) { marker.append("W"); }
+	else if (aRotation > 310 && aRotation < 320) { marker.append("NW"); }
+	else { marker.append(notch ? "|" : std::to_string(aRotation)); }
 
     return marker;
 }
-
-float widgetWidth = 600.0f;
-float range = 180.0f;
-float step = 15.0f;
-float centerX = widgetWidth / 2;
-float offsetPerDegree = widgetWidth / range;
 
 void AddonRender()
 {
 	if (!IsCompassStripVisible) { return; }
 
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::PushFont(io.Fonts->Fonts[1]);
+
 	ImGui::PushItemWidth(widgetWidth);
-    if (ImGui::Begin("COMPASS_STRIP", (bool *)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar))
+	ImGui::SetNextWindowPos(CompassStripPosition);
+    if (ImGui::Begin("COMPASS_STRIP", (bool *)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing))
     {
         float fRot = atan2f(MumbleLink->CameraFront.X, MumbleLink->CameraFront.Z) * 180.0f / 3.14159f;
         int iRot = round(fRot);
@@ -107,6 +121,8 @@ void AddonRender()
 		/* this is to display text between 0-360 */
         std::string cText = GetMarkerText(iRot, false);
 
+		ImGui::PushFont(io.Fonts->Fonts[2]);
+
 		/* center scope */
         ImVec2 scope = initial;
         scope.x += centerX;
@@ -114,8 +130,10 @@ void AddonRender()
         scope.x -= scopeWidth; // center the marker
         ImGui::SetCursorPos(scope);
 		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(221, 153, 0, 255));
-        ImGui::Text(cText.c_str());
+        ImGui::TextOutlined(cText.c_str());
 		ImGui::PopStyleColor();
+
+		ImGui::PopFont();
 		
 		for (size_t i = 0; i < 360 / step; i++)
 		{
@@ -145,36 +163,31 @@ void AddonRender()
 			if (centerPreText > centerLow && centerPreText < centerHigh) { continue; }
 
 			ImGui::SetCursorPos(pos);
-			ImGui::Text(notchText.c_str());
+			ImGui::TextOutlined(notchText.c_str());
 		}
     }
+
+	ImGui::PopFont();
 
     ImGui::End();
 }
 
-void AddonOptions()
-{
-	/* This addon has no options *shrug* */
-	return;
-}
-
-extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
+extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 {
 	AddonDef = new AddonDefinition();
 	AddonDef->Signature = 17;
-	AddonDef->Name = L"World Compass";
-	AddonDef->Version = __DATE__ L" " __TIME__;
-	AddonDef->Author = L"Raidcore";
-	AddonDef->Description = L"Adds a simple compass widget to the UI, as well as to your character in the world.";
+	AddonDef->Name = "World Compass";
+	AddonDef->Version = __DATE__ " " __TIME__;
+	AddonDef->Author = "Raidcore";
+	AddonDef->Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
 	AddonDef->Load = AddonLoad;
 	AddonDef->Unload = AddonUnload;
 
 	AddonDef->Render = AddonRender;
-	AddonDef->Options = AddonOptions;
 
 	/* not necessary if hosted on Raidcore, but shown anyway for the  example also useful as a backup resource */
 	AddonDef->Provider = EUpdateProvider::GitHub;
-	AddonDef->UpdateLink = L"https://github.com/RaidcoreGG/GW2-Compass";
+	AddonDef->UpdateLink = "https://github.com/RaidcoreGG/GW2-Compass";
 
 	return AddonDef;
 }

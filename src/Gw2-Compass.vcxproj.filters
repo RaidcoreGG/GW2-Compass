@@ -42,6 +42,9 @@
     <ClInclude Include="Mumble.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="imgui\imgui_extensions.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entry.cpp">
