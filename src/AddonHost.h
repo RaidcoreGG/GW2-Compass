@@ -103,30 +103,35 @@ typedef void (*KEYBINDS_PROCESS)(std::string aIdentifier);
 typedef void (*KEYBINDS_REGISTER)(std::string aIdentifier, KEYBINDS_PROCESS aKeybindHandler, std::string aKeybind);
 typedef void (*KEYBINDS_UNREGISTER)(std::string aIdentifier);
 
+typedef void* (*DATALINK_GETRESOURCE)(std::string aIdentifier);
+typedef void* (*DATALINK_SHARERESOURCE)(std::string aIdentifier, size_t aResourceSize);
+
 struct AddonAPI
 {
-	IDXGISwapChain*		SwapChain;
-	ImGuiContext*		ImguiContext;
-	LinkedMem*			MumbleLink;
-	unsigned*			WindowWidth;
-	unsigned*			WindowHeight;
+	IDXGISwapChain*			SwapChain;
+	ImGuiContext*			ImguiContext;
+	unsigned*				WindowWidth;
+	unsigned*				WindowHeight;
 
-	VTableMinhook		MinhookFunctions;
-	VTableLogging		LoggingFunctions;
+	VTableMinhook			MinhookFunctions;
+	VTableLogging			LoggingFunctions;
 
 	/* Events */
-	EVENTS_RAISE		RaiseEvent;
-	EVENTS_SUBSCRIBE	SubscribeEvent;
-	EVENTS_SUBSCRIBE	UnsubscribeEvent;
+	EVENTS_RAISE			RaiseEvent;
+	EVENTS_SUBSCRIBE		SubscribeEvent;
+	EVENTS_SUBSCRIBE		UnsubscribeEvent;
 
 	/* Keybinds */
-	KEYBINDS_REGISTER	RegisterKeybind;
-	KEYBINDS_UNREGISTER	UnregisterKeybind;
+	KEYBINDS_REGISTER		RegisterKeybind;
+	KEYBINDS_UNREGISTER		UnregisterKeybind;
+
+	/* DataLink */
+	DATALINK_GETRESOURCE	GetResource;
+	DATALINK_SHARERESOURCE	ShareResource;
 
 	/* API */
 		// GW2 API FUNCS
 		// LOGITECH API FUNCS
-		// RESOURCE SHARING FUNCS
 };
 
 enum class EUpdateProvider

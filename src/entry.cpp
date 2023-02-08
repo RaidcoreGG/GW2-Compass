@@ -58,7 +58,7 @@ void AddonLoad(AddonAPI aHostApi)
 	ImGui::SetCurrentContext(aHostApi.ImguiContext);
 	//ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))mallocfn, (void(*)(void*, void*))freefn); // on imgui 1.80+
 
-	MumbleLink = APIDefs.MumbleLink;
+	MumbleLink = (LinkedMem*)APIDefs.GetResource("MUMBLE_LINK");
 
 	/* set keybinds */
 	APIDefs.RegisterKeybind(COMPASS_TOGGLEVIS, ProcessKeybind, "CTRL+C");
