@@ -99,35 +99,51 @@ struct Keybind
 	bool Shift;
 };
 
-typedef void (*KEYBINDS_PROCESS)(std::string aIdentifier);
-typedef void (*KEYBINDS_REGISTER)(std::string aIdentifier, KEYBINDS_PROCESS aKeybindHandler, std::string aKeybind);
-typedef void (*KEYBINDS_UNREGISTER)(std::string aIdentifier);
+typedef void		(*KEYBINDS_PROCESS)(std::string aIdentifier);
+typedef void		(*KEYBINDS_REGISTER)(std::string aIdentifier, KEYBINDS_PROCESS aKeybindHandler, std::string aKeybind);
+typedef void		(*KEYBINDS_UNREGISTER)(std::string aIdentifier);
 
-typedef void* (*DATALINK_GETRESOURCE)(std::string aIdentifier);
-typedef void* (*DATALINK_SHARERESOURCE)(std::string aIdentifier, size_t aResourceSize);
+typedef void*		(*DATALINK_GETRESOURCE)(std::string aIdentifier);
+typedef void*		(*DATALINK_SHARERESOURCE)(std::string aIdentifier, size_t aResourceSize);
+
+struct Texture
+{
+	unsigned Width;
+	unsigned Height;
+	ID3D11ShaderResourceView* Resource;
+};
+
+typedef Texture(*TEXTURES_GET)(std::string aIdentifier);
+typedef Texture(*TEXTURES_LOADFROMFILE)(std::string aIdentifier, std::string aFilename);
+typedef Texture(*TEXTURES_LOADFROMRESOURCE)(std::string aIdentifier, std::string aName, HMODULE aModule);
 
 struct AddonAPI
 {
-	IDXGISwapChain*			SwapChain;
-	ImGuiContext*			ImguiContext;
-	unsigned*				WindowWidth;
-	unsigned*				WindowHeight;
+	IDXGISwapChain*				SwapChain;
+	ImGuiContext*				ImguiContext;
+	unsigned*					WindowWidth;
+	unsigned*					WindowHeight;
 
-	VTableMinhook			MinhookFunctions;
-	VTableLogging			LoggingFunctions;
+	VTableMinhook				MinhookFunctions;
+	VTableLogging				LoggingFunctions;
 
 	/* Events */
-	EVENTS_RAISE			RaiseEvent;
-	EVENTS_SUBSCRIBE		SubscribeEvent;
-	EVENTS_SUBSCRIBE		UnsubscribeEvent;
+	EVENTS_RAISE				RaiseEvent;
+	EVENTS_SUBSCRIBE			SubscribeEvent;
+	EVENTS_SUBSCRIBE			UnsubscribeEvent;
 
 	/* Keybinds */
-	KEYBINDS_REGISTER		RegisterKeybind;
-	KEYBINDS_UNREGISTER		UnregisterKeybind;
+	KEYBINDS_REGISTER			RegisterKeybind;
+	KEYBINDS_UNREGISTER			UnregisterKeybind;
 
 	/* DataLink */
-	DATALINK_GETRESOURCE	GetResource;
-	DATALINK_SHARERESOURCE	ShareResource;
+	DATALINK_GETRESOURCE		GetResource;
+	DATALINK_SHARERESOURCE		ShareResource;
+
+	/* Textures */
+	TEXTURES_GET				GetTexture;
+	TEXTURES_LOADFROMFILE		LoadTextureFromFile;
+	TEXTURES_LOADFROMRESOURCE	LoadTextureFromResource;
 
 	/* API */
 		// GW2 API FUNCS

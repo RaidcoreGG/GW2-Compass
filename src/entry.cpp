@@ -6,11 +6,13 @@
 #include "imgui\imgui.h"
 #include "imgui\imgui_extensions.h"
 
+HMODULE hSelf;
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
     switch (ul_reason_for_call)
     {
-		case DLL_PROCESS_ATTACH: break;
+		case DLL_PROCESS_ATTACH: hSelf = hModule; break;
 		case DLL_PROCESS_DETACH: break;
 		case DLL_THREAD_ATTACH: break;
 		case DLL_THREAD_DETACH: break;
@@ -21,8 +23,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 AddonAPI APIDefs;
 AddonDefinition* AddonDef;
 
-bool IsCompassStripVisible = false;
-bool IsWorldCompassVisible = false;
+bool IsCompassStripVisible = true;
+bool IsWorldCompassVisible = true;
 LinkedMem* MumbleLink = nullptr;
 
 float widgetWidth = 600.0f;
@@ -30,6 +32,7 @@ float range = 180.0f;
 float step = 15.0f;
 float centerX = widgetWidth / 2;
 float offsetPerDegree = widgetWidth / range;
+float padding = 5.0f;
 
 ImVec2 CompassStripPosition = ImVec2(0,0);
 
@@ -52,6 +55,8 @@ void OnWindowResized(void* aEventArgs)
 const char* COMPASS_TOGGLEVIS =	"COMPASS_TOGGLEVIS";
 const char* WINDOW_RESIZED =	"WINDOW_RESIZED";
 
+Texture hrTex{};
+
 void AddonLoad(AddonAPI aHostApi)
 {
 	APIDefs = aHostApi;
@@ -65,6 +70,8 @@ void AddonLoad(AddonAPI aHostApi)
 
 	/* set events */
 	APIDefs.SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
+
+	hrTex = APIDefs.LoadTextureFromFile("TEX_HR", "C:\\Program Files\\Guild Wars 2\\addons\\Raidcore\\hr.png");
 
 	OnWindowResized(nullptr);
 }
@@ -104,66 +111,118 @@ void AddonRender()
 	if (!IsCompassStripVisible) { return; }
 
 	ImGuiIO& io = ImGui::GetIO();
+
+	/* use Menomonia */
 	ImGui::PushFont(io.Fonts->Fonts[1]);
 
+	/* set width and position */
 	ImGui::PushItemWidth(widgetWidth);
 	ImGui::SetNextWindowPos(CompassStripPosition);
     if (ImGui::Begin("COMPASS_STRIP", (bool *)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing))
     {
+		float offsetTop = 0.0f;
+
+		// draw separator texture
+		if (hrTex.Resource != nullptr)
+		{
+			ImGui::SetCursorPos(ImVec2(0, 0));
+			ImGui::Image(hrTex.Resource, ImVec2(hrTex.Width, hrTex.Height));
+			offsetTop = hrTex.Height;
+		}
+		else
+		{
+			ImGui::Separator();
+			offsetTop = ImGui::GetFontSize();
+		}
+
+		/* get rotation in float for accuracy and int for display */
         float fRot = atan2f(MumbleLink->CameraFront.X, MumbleLink->CameraFront.Z) * 180.0f / 3.14159f;
         int iRot = round(fRot);
 
-		ImGui::Separator();
-
-        ImVec2 initial = ImGui::GetCursorPos();
-		initial.x = 0;
-
-		/* this is to display text between 0-360 */
-        std::string cText = GetMarkerText(iRot, false);
-
+		/* use Menomonia but bigger */
 		ImGui::PushFont(io.Fonts->Fonts[2]);
 
 		/* center scope */
-        ImVec2 scope = initial;
-        scope.x += centerX;
-		float scopeWidth = ImGui::CalcTextSize(cText.c_str()).x / 2;
-        scope.x -= scopeWidth; // center the marker
-        ImGui::SetCursorPos(scope);
+		/* logic, the draw point for the scope is the center of the widget minus half of the center text size */
+		std::string scopeText = GetMarkerText(iRot, false); /* this is to display text between 0-360 */
+		float scopeOffset = ImGui::CalcTextSize(scopeText.c_str()).x / 2; /* width of the center text divided by 2 */
+		ImVec2 scopeDrawPos = ImVec2(centerX - scopeOffset, offsetTop); /* center minus half of center text */
+        ImGui::SetCursorPos(scopeDrawPos);
 		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(221, 153, 0, 255));
-        ImGui::TextOutlined(cText.c_str());
+        ImGui::TextOutlined(scopeText.c_str());
 		ImGui::PopStyleColor();
 
+		/* stop using big Menomonia */
 		ImGui::PopFont();
-		
+
+		/* iterate through 360 degrees to get the notches/markers */
 		for (size_t i = 0; i < 360 / step; i++)
 		{
-			float fMarker = step * i;
-			if (fMarker > 180) { fMarker -= 360; } // correct so we have negative wrapping again instead of 0-360;
+			float fMarker = step * i; /* this is a fake "rotation" based on the current notch */
+			//if (fMarker > 180) { fMarker -= 360; } // correct so we have negative wrapping again instead of 0-360;
 			int iMarker = round(fMarker);
 
+			float markerRelativeOffset = offsetPerDegree * (fMarker + (fRot * (-1))); /* where is the marker going to be drawn, relative to the center notch */
+
+			/* fix behind */
+			/* I don't even know why this works, I managed to get this functioning by changing random calculations */
+			if (markerRelativeOffset > (widgetWidth * 1.5)) { markerRelativeOffset -= (widgetWidth * 2); }
+			else if (markerRelativeOffset < (widgetWidth * 0.5 * -1)) { markerRelativeOffset += (widgetWidth * 2); }
+
+			
 			/* this is to display text between 0-360 */
 			std::string notchText = GetMarkerText(iMarker, false);
-
-			ImVec2 pos = initial;
-			pos.x += centerX;
-			float offset = offsetPerDegree * (fMarker + (fRot * (-1)));
+			float markerCenter = centerX + markerRelativeOffset;
+			float markerWidth = ImGui::CalcTextSize(notchText.c_str()).x;
+			float markerOffset = markerWidth / 2; /* marker text width divided by 2 */
+			ImVec2 markerDrawPos = ImVec2(centerX + markerRelativeOffset - markerOffset, offsetTop); /* based on the center + offset from center (already accounted for wrap around) - markerOffset (which is markerText divided by 2) */
 			
-			/* fix behind */
-			if (offset > (widgetWidth * 1.5)) { offset -= (widgetWidth * 2); }
-			else if (offset < (widgetWidth * 0.5 * -1)) { offset += (widgetWidth * 2); }
+			float helper = ImGui::CalcTextSize("XXX").x;
 
-			float centerPreText = offset;
-			float markerWidth = ImGui::CalcTextSize(notchText.c_str()).x / 2;
-			offset -= markerWidth; // center the marker
-			pos.x += offset;
+			float t = 255; /* transparency variable*/
 
-			// + 5.0f "padding"
-			float centerLow = initial.x - (scopeWidth + markerWidth + 5.0f);
-			float centerHigh = initial.x + (scopeWidth + markerWidth + 5.0f);
-			if (centerPreText > centerLow && centerPreText < centerHigh) { continue; }
+			float markerLeft = markerCenter - markerOffset - padding; // left side of the text
+			float markerRight = markerCenter + markerOffset + padding; // right side of the text
 
-			ImGui::SetCursorPos(pos);
-			ImGui::TextOutlined(notchText.c_str());
+			/* breakpoints where fade should start */
+			float brL = markerWidth;
+			float brLC = centerX - markerWidth - helper;
+			float brRC = centerX + markerWidth + helper;
+			float brR = widgetWidth - markerWidth;
+
+			/*ImGui::SetCursorPos(ImVec2(brL - (ImGui::CalcTextSize(".").x / 2), offsetTop));
+			ImGui::Text(".");
+			ImGui::SetCursorPos(ImVec2(brLC - (ImGui::CalcTextSize(".").x / 2), offsetTop));
+			ImGui::Text(".");
+			ImGui::SetCursorPos(ImVec2(brRC - (ImGui::CalcTextSize(".").x / 2), offsetTop));
+			ImGui::Text(".");
+			ImGui::SetCursorPos(ImVec2(brR - (ImGui::CalcTextSize(".").x / 2), offsetTop));
+			ImGui::Text(".");*/
+
+			if (markerLeft <= 0 || markerRight >= widgetWidth) { continue; } // skip oob
+			else if (markerLeft < brL)
+			{
+				t *= (markerLeft / markerWidth);
+			}
+			else if (markerRight > brR)
+			{
+				t *= ((widgetWidth - markerRight) / markerWidth);
+			}
+			else if (markerRight > brLC && markerLeft < centerX)
+			{
+				t *= ((centerX - markerRight) / (markerWidth + helper));
+				if (markerRight > centerX) { t = 0; }
+			}
+			else if (markerLeft < brRC && markerRight > centerX)
+			{
+				t *= ((markerLeft - centerX) / (markerWidth + helper));
+				if (markerLeft < centerX) { t = 0; }
+			}
+			
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, t));
+			ImGui::SetCursorPos(markerDrawPos);
+			ImGui::TextOutlinedT(t, notchText.c_str());
+			ImGui::PopStyleColor();
 		}
     }
 
