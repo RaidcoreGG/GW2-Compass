@@ -113,9 +113,10 @@ struct Texture
 	ID3D11ShaderResourceView* Resource;
 };
 
-typedef Texture(*TEXTURES_GET)(std::string aIdentifier);
-typedef Texture(*TEXTURES_LOADFROMFILE)(std::string aIdentifier, std::string aFilename);
-typedef Texture(*TEXTURES_LOADFROMRESOURCE)(std::string aIdentifier, std::string aName, HMODULE aModule);
+typedef void	(*TEXTURES_RECEIVECALLBACK)(std::string aIdentifier, Texture aTexture);
+typedef Texture	(*TEXTURES_GET)(std::string aIdentifier);
+typedef void	(*TEXTURES_LOADFROMFILE)(std::string aIdentifier, std::string aFilename, TEXTURES_RECEIVECALLBACK aCallback);
+typedef void	(*TEXTURES_LOADFROMRESOURCE)(std::string aIdentifier, std::string aName, HMODULE aModule, TEXTURES_RECEIVECALLBACK aCallback);
 
 struct AddonAPI
 {

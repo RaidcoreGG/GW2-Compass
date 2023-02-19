@@ -57,6 +57,14 @@ const char* WINDOW_RESIZED =	"WINDOW_RESIZED";
 
 Texture hrTex{};
 
+void ReceiveTexture(std::string aIdentifier, Texture aTexture)
+{
+	if (aIdentifier == "TEX_HR")
+	{
+		hrTex = aTexture;
+	}
+}
+
 void AddonLoad(AddonAPI aHostApi)
 {
 	APIDefs = aHostApi;
@@ -71,7 +79,7 @@ void AddonLoad(AddonAPI aHostApi)
 	/* set events */
 	APIDefs.SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 
-	hrTex = APIDefs.LoadTextureFromFile("TEX_HR", "C:\\Program Files\\Guild Wars 2\\addons\\Raidcore\\hr.png");
+	APIDefs.LoadTextureFromFile("TEX_HR", "C:\\Program Files\\Guild Wars 2\\addons\\Raidcore\\hr.png", ReceiveTexture);
 
 	OnWindowResized(nullptr);
 }
@@ -177,7 +185,8 @@ void AddonRender()
 			float markerOffset = markerWidth / 2; /* marker text width divided by 2 */
 			ImVec2 markerDrawPos = ImVec2(centerX + markerRelativeOffset - markerOffset, offsetTop); /* based on the center + offset from center (already accounted for wrap around) - markerOffset (which is markerText divided by 2) */
 			
-			float helper = ImGui::CalcTextSize("XXX").x;
+			float helperWidth = ImGui::CalcTextSize("XXX").x;
+			float helperOffset = helperWidth / 2;
 
 			float t = 255; /* transparency variable*/
 
@@ -186,8 +195,8 @@ void AddonRender()
 
 			/* breakpoints where fade should start */
 			float brL = markerWidth;
-			float brLC = centerX - markerWidth - helper;
-			float brRC = centerX + markerWidth + helper;
+			float brLC = centerX - markerWidth - helperWidth;
+			float brRC = centerX + markerWidth + helperWidth;
 			float brR = widgetWidth - markerWidth;
 
 			/*ImGui::SetCursorPos(ImVec2(brL - (ImGui::CalcTextSize(".").x / 2), offsetTop));
@@ -210,13 +219,13 @@ void AddonRender()
 			}
 			else if (markerRight > brLC && markerLeft < centerX)
 			{
-				t *= ((centerX - markerRight) / (markerWidth + helper));
-				if (markerRight > centerX) { t = 0; }
+				t *= (((centerX - helperOffset) - markerRight) / (markerWidth + helperOffset));
+				if (markerRight > (centerX - helperOffset)) { t = 0; }
 			}
 			else if (markerLeft < brRC && markerRight > centerX)
 			{
-				t *= ((markerLeft - centerX) / (markerWidth + helper));
-				if (markerLeft < centerX) { t = 0; }
+				t *= ((markerLeft - (centerX + helperOffset)) / (markerWidth + helperOffset));
+				if (markerLeft < (centerX + helperOffset)) { t = 0; }
 			}
 			
 			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, t));
