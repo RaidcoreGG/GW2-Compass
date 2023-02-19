@@ -5,6 +5,7 @@
 #include "AddonHost.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_extensions.h"
+#include "resource.h"
 
 HMODULE hSelf;
 
@@ -79,7 +80,7 @@ void AddonLoad(AddonAPI aHostApi)
 	/* set events */
 	APIDefs.SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 
-	APIDefs.LoadTextureFromFile("TEX_HR", "C:\\Program Files\\Guild Wars 2\\addons\\Raidcore\\hr.png", ReceiveTexture);
+	APIDefs.LoadTextureFromResource("TEX_HR", IDB_PNG1, hSelf, ReceiveTexture);
 
 	OnWindowResized(nullptr);
 }
