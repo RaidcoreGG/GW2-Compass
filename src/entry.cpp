@@ -53,17 +53,24 @@ void OnWindowResized(void* aEventArgs)
 	CompassStripPosition = ImVec2((*APIDefs.WindowWidth - widgetWidth) / 2, *APIDefs.WindowHeight * .2f);
 }
 
-const char* COMPASS_TOGGLEVIS =	"COMPASS_TOGGLEVIS";
-const char* WINDOW_RESIZED =	"WINDOW_RESIZED";
+const char* COMPASS_TOGGLEVIS	= "KB_COMPASS_TOGGLEVIS";
+const char* WINDOW_RESIZED		= "EV_WINDOW_RESIZED";
+const char* HR_TEX				= "TEX_SEPARATOR_DETAIL";
 
 Texture hrTex{};
 
 void ReceiveTexture(std::string aIdentifier, Texture aTexture)
 {
-	if (aIdentifier == "TEX_HR")
+	if (aIdentifier == HR_TEX)
 	{
 		hrTex = aTexture;
 	}
+}
+
+void RenderShortcut()
+{
+	ImGui::Checkbox("Compass Strip", &IsCompassStripVisible);
+	ImGui::Checkbox("Compass World", &IsWorldCompassVisible);
 }
 
 void AddonLoad(AddonAPI aHostApi)
@@ -80,7 +87,9 @@ void AddonLoad(AddonAPI aHostApi)
 	/* set events */
 	APIDefs.SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 
-	APIDefs.LoadTextureFromResource("TEX_HR", IDB_PNG1, hSelf, ReceiveTexture);
+	APIDefs.LoadTextureFromResource(HR_TEX, IDB_PNG1, hSelf, ReceiveTexture);
+
+	APIDefs.AddSimpleShortcut("QAS_COMPASS", RenderShortcut);
 
 	OnWindowResized(nullptr);
 }
@@ -88,10 +97,10 @@ void AddonLoad(AddonAPI aHostApi)
 void AddonUnload()
 {
 	/* release keybinds */
-	APIDefs.UnregisterKeybind(COMPASS_TOGGLEVIS);
+	//APIDefs.UnregisterKeybind(COMPASS_TOGGLEVIS);
 
 	/* release events */
-	APIDefs.UnsubscribeEvent(WINDOW_RESIZED, OnWindowResized);
+	//APIDefs.UnsubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 }
 
 std::string GetMarkerText(int aRotation, bool notch = true)
@@ -251,6 +260,7 @@ extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 	AddonDef->Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
 	AddonDef->Load = AddonLoad;
 	AddonDef->Unload = AddonUnload;
+	AddonDef->Flags = EAddonFlags::None;
 
 	AddonDef->Render = AddonRender;
 
