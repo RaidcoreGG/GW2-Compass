@@ -37,10 +37,14 @@ float padding = 5.0f;
 
 ImVec2 CompassStripPosition = ImVec2(0,0);
 
+const char* COMPASS_TOGGLEVIS = "KB_COMPASS_TOGGLEVIS";
+const char* WINDOW_RESIZED = "EV_WINDOW_RESIZED";
+const char* HR_TEX = "TEX_SEPARATOR_DETAIL";
+
 void ProcessKeybind(std::string aIdentifier)
 {
 	/* if COMPASS_TOGGLEVIS is passed, we toggle the compass visibility */
-	if (aIdentifier == "COMPASS_TOGGLEVIS")
+	if (aIdentifier == COMPASS_TOGGLEVIS)
 	{
 		IsCompassStripVisible = !IsCompassStripVisible;
 		return;
@@ -52,10 +56,6 @@ void OnWindowResized(void* aEventArgs)
 	/* event args are nullptr, ignore */
 	CompassStripPosition = ImVec2((*APIDefs.WindowWidth - widgetWidth) / 2, *APIDefs.WindowHeight * .2f);
 }
-
-const char* COMPASS_TOGGLEVIS	= "KB_COMPASS_TOGGLEVIS";
-const char* WINDOW_RESIZED		= "EV_WINDOW_RESIZED";
-const char* HR_TEX				= "TEX_SEPARATOR_DETAIL";
 
 Texture hrTex{};
 
