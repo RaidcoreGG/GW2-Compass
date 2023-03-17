@@ -27,6 +27,7 @@ AddonDefinition* AddonDef;
 bool IsCompassStripVisible = true;
 bool IsWorldCompassVisible = true;
 LinkedMem* MumbleLink = nullptr;
+NexusLinkData* NexusLink = nullptr;
 
 float widgetWidth = 600.0f;
 float range = 180.0f;
@@ -54,12 +55,12 @@ void ProcessKeybind(std::string aIdentifier)
 void OnWindowResized(void* aEventArgs)
 {
 	/* event args are nullptr, ignore */
-	CompassStripPosition = ImVec2((*APIDefs.WindowWidth - widgetWidth) / 2, *APIDefs.WindowHeight * .2f);
+	CompassStripPosition = ImVec2((NexusLink->Width - widgetWidth) / 2, NexusLink->Height * .2f);
 }
 
-Texture hrTex{};
+Texture* hrTex{};
 
-void ReceiveTexture(std::string aIdentifier, Texture aTexture)
+void ReceiveTexture(std::string aIdentifier, Texture* aTexture)
 {
 	if (aIdentifier == HR_TEX)
 	{
@@ -79,7 +80,8 @@ void AddonLoad(AddonAPI aHostApi)
 	ImGui::SetCurrentContext(aHostApi.ImguiContext);
 	//ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))mallocfn, (void(*)(void*, void*))freefn); // on imgui 1.80+
 
-	MumbleLink = (LinkedMem*)APIDefs.GetResource("MUMBLE_LINK");
+	MumbleLink = (LinkedMem*)APIDefs.GetResource("DL_MUMBLE_LINK");
+	NexusLink = (NexusLinkData*)APIDefs.GetResource("DL_NEXUS_LINK");
 
 	/* set keybinds */
 	APIDefs.RegisterKeybind(COMPASS_TOGGLEVIS, ProcessKeybind, "CTRL+C");
@@ -141,11 +143,11 @@ void AddonRender()
 		float offsetTop = 0.0f;
 
 		// draw separator texture
-		if (hrTex.Resource != nullptr)
+		if (hrTex != nullptr)
 		{
 			ImGui::SetCursorPos(ImVec2(0, 0));
-			ImGui::Image(hrTex.Resource, ImVec2(hrTex.Width, hrTex.Height));
-			offsetTop = hrTex.Height;
+			ImGui::Image(hrTex->Resource, ImVec2(hrTex->Width, hrTex->Height));
+			offsetTop = hrTex->Height;
 		}
 		else
 		{

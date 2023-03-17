@@ -98,8 +98,8 @@ struct Texture
 	ID3D11ShaderResourceView* Resource;
 };
 
-typedef void		(*TEXTURES_RECEIVECALLBACK)(std::string aIdentifier, Texture aTexture);
-typedef Texture		(*TEXTURES_GET)(std::string aIdentifier);
+typedef void		(*TEXTURES_RECEIVECALLBACK)(std::string aIdentifier, Texture* aTexture);
+typedef Texture*	(*TEXTURES_GET)(std::string aIdentifier);
 typedef void		(*TEXTURES_LOADFROMFILE)(std::string aIdentifier, std::string aFilename, TEXTURES_RECEIVECALLBACK aCallback);
 typedef void		(*TEXTURES_LOADFROMRESOURCE)(std::string aIdentifier, unsigned aResourceID, HMODULE aModule, TEXTURES_RECEIVECALLBACK aCallback);
 
@@ -107,14 +107,12 @@ typedef void		(*QUICKACCESS_SHORTCUTRENDERCALLBACK)	();
 typedef void		(*QUICKACCESS_ADDSHORTCUT)				(std::string aIdentifier, std::string aTextureIdentifier, std::string aTextureHoverIdentifier, std::string aKeybindIdentifier, std::string aTooltipText);
 typedef void		(*QUICKACCESS_REMOVESHORTCUT)			(std::string aIdentifier);
 typedef void		(*QUICKACCESS_ADDSIMPLE)				(std::string aIdentifier, QUICKACCESS_SHORTCUTRENDERCALLBACK aShortcutRenderCallback);
-typedef void		(*QUICKACCESS_REMOVESIMPLE)			(std::string aIdentifier);
+typedef void		(*QUICKACCESS_REMOVESIMPLE)				(std::string aIdentifier);
 
 struct AddonAPI
 {
-	IDXGISwapChain* SwapChain;
-	ImGuiContext* ImguiContext;
-	unsigned* WindowWidth;
-	unsigned* WindowHeight;
+	IDXGISwapChain*				SwapChain;
+	ImGuiContext*				ImguiContext;
 
 	/* Minhook */
 	MINHOOK_CREATE				CreateHook;
@@ -169,6 +167,21 @@ enum class EUpdateProvider
 	Raidcore = 1,	/* Provider is Raidcore (via API) */
 	GitHub = 2,		/* Provider is GitHub Releases */
 	Direct = 3		/* Provider is direct file link */
+};
+
+struct NexusLinkData
+{
+	unsigned	Width;
+	unsigned	Height;
+	float		Scaling;
+
+	bool		IsMoving;
+	bool		IsCameraMoving;
+	bool		IsGameplay;
+
+	ImFont* Font;
+	ImFont* FontBig;
+	ImFont* FontUI;
 };
 
 typedef void		(*ADDON_LOAD)(AddonAPI aHostApi);
