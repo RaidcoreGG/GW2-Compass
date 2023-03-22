@@ -6,7 +6,6 @@
 #include <mutex>
 
 #include "imgui/imgui.h"
-#include "Mumble.h"
 
 // MinHook Error Codes.
 enum MH_STATUS

@@ -6,6 +6,7 @@
 #include "imgui\imgui.h"
 #include "imgui\imgui_extensions.h"
 #include "resource.h"
+#include "mumble/Mumble.h"
 
 HMODULE hSelf;
 
@@ -26,7 +27,7 @@ AddonDefinition* AddonDef;
 
 bool IsCompassStripVisible = true;
 bool IsWorldCompassVisible = true;
-LinkedMem* MumbleLink = nullptr;
+Mumble::Data* MumbleLink = nullptr;
 NexusLinkData* NexusLink = nullptr;
 
 float widgetWidth = 600.0f;
@@ -80,7 +81,7 @@ void AddonLoad(AddonAPI aHostApi)
 	ImGui::SetCurrentContext(aHostApi.ImguiContext);
 	//ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))mallocfn, (void(*)(void*, void*))freefn); // on imgui 1.80+
 
-	MumbleLink = (LinkedMem*)APIDefs.GetResource("DL_MUMBLE_LINK");
+	MumbleLink = (Mumble::Data*)APIDefs.GetResource("DL_MUMBLE_LINK");
 
 	std::string nxs;
 	nxs.append("DL_NEXUS_LINK_");

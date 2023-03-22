@@ -39,13 +39,13 @@
     <ClInclude Include="AddonHost.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mumble.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\imgui_extensions.h">
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mumble\Mumble.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
