@@ -81,7 +81,11 @@ void AddonLoad(AddonAPI aHostApi)
 	//ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))mallocfn, (void(*)(void*, void*))freefn); // on imgui 1.80+
 
 	MumbleLink = (LinkedMem*)APIDefs.GetResource("DL_MUMBLE_LINK");
-	NexusLink = (NexusLinkData*)APIDefs.GetResource("DL_NEXUS_LINK");
+
+	std::string nxs;
+	nxs.append("DL_NEXUS_LINK_");
+	nxs.append(std::to_string(GetCurrentProcessId()));
+	NexusLink = (NexusLinkData*)APIDefs.GetResource(nxs);
 
 	/* set keybinds */
 	APIDefs.RegisterKeybind(COMPASS_TOGGLEVIS, ProcessKeybind, "CTRL+C");
@@ -128,7 +132,7 @@ std::string GetMarkerText(int aRotation, bool notch = true)
 
 void AddonRender()
 {
-	if (!IsCompassStripVisible) { return; }
+	if (!IsCompassStripVisible || !NexusLink->IsGameplay) { return; }
 
 	ImGuiIO& io = ImGui::GetIO();
 

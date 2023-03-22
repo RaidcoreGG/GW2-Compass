@@ -179,9 +179,9 @@ struct NexusLinkData
 	bool		IsCameraMoving;
 	bool		IsGameplay;
 
-	ImFont* Font;
-	ImFont* FontBig;
-	ImFont* FontUI;
+	ImFont*		Font;
+	ImFont*		FontBig;
+	ImFont*		FontUI;
 };
 
 typedef void		(*ADDON_LOAD)(AddonAPI aHostApi);
