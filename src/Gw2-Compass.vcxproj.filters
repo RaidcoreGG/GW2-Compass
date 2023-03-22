@@ -36,9 +36,6 @@
     <ClInclude Include="imgui\imconfig.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="AddonHost.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="imgui\imgui_extensions.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -46,6 +43,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mumble\Mumble.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nexus\Nexus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

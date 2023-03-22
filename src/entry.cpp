@@ -2,7 +2,7 @@
 #include <string>
 #include <cmath>
 
-#include "AddonHost.h"
+#include "nexus/Nexus.h"
 #include "imgui\imgui.h"
 #include "imgui\imgui_extensions.h"
 #include "resource.h"
