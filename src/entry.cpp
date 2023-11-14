@@ -48,7 +48,7 @@ const char* COMPASS_TOGGLEVIS = "KB_COMPASS_TOGGLEVIS";
 const char* WINDOW_RESIZED = "EV_WINDOW_RESIZED";
 const char* MUMBLE_IDENITY_UPDATED = "EV_MUMBLE_IDENTITY_UPDATED";
 const char* HR_TEX = "TEX_SEPARATOR_DETAIL";
-std::string NLINK_NAME = "DL_NEXUS_LINK_";
+const char* NLINK_NAME = "DL_NEXUS_LINK";
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -76,10 +76,10 @@ extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
 	AddonDef->Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
 	AddonDef->Load = AddonLoad;
 	AddonDef->Unload = AddonUnload;
-	AddonDef->Flags = EAddonFlags::None;
+	AddonDef->Flags = EAddonFlags_None;
 
 	/* not necessary if hosted on Raidcore, but shown anyway for the example also useful as a backup resource */
-	AddonDef->Provider = EUpdateProvider::GitHub;
+	AddonDef->Provider = EUpdateProvider_GitHub;
 	AddonDef->UpdateLink = "https://github.com/RaidcoreGG/GW2-Compass";
 
 	return AddonDef;
@@ -93,8 +93,7 @@ void AddonLoad(AddonAPI* aApi)
 
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource("DL_MUMBLE_LINK");
 
-	NLINK_NAME.append(std::to_string(GetCurrentProcessId()));
-	NexusLink = (NexusLinkData*)APIDefs->GetResource(NLINK_NAME.c_str());
+	NexusLink = (NexusLinkData*)APIDefs->GetResource(NLINK_NAME);
 
 	APIDefs->RegisterKeybindWithString(COMPASS_TOGGLEVIS, ProcessKeybind, "CTRL+C");
 
@@ -105,10 +104,10 @@ void AddonLoad(AddonAPI* aApi)
 	APIDefs->AddSimpleShortcut("QAS_COMPASS", AddonCompassShortcut);
 	//APIDefs.AddShortcut("QA_COMPASS", "ICON_GENERIC", "ICON_GENERIC_HOVER", "KB_COMPASS_TOGGLEVIS", "pee pee poo poo");
 
-	APIDefs->RegisterRender(ERenderType::Render, AddonRender);
-	APIDefs->RegisterRender(ERenderType::OptionsRender, AddonOptions);
+	APIDefs->RegisterRender(ERenderType_Render, AddonRender);
+	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptions);
 
-	APIDefs->Log(ELogLevel::DEBUG, "Compass addon loaded.");
+	APIDefs->Log(ELogLevel_DEBUG, "Compass addon loaded.");
 
 	OnWindowResized(nullptr);
 }
