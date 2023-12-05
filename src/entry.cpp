@@ -2,22 +2,32 @@
 #include <string>
 #include <cmath>
 #include <vector>
+#include <filesystem>
+#include <mutex>
+#include <fstream>
+
+#include "Version.h"
 
 #include "nexus/Nexus.h"
-#include "imgui\imgui.h"
-#include "imgui\imgui_extensions.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_extensions.h"
 #include "resource.h"
 #include "mumble/Mumble.h"
+
+#include "nlohmann/json.hpp"
+using nlohmann::json;
 
 void ProcessKeybind(const char* aIdentifier);
 void OnWindowResized(void* aEventArgs);
 void ReceiveTexture(const char* aIdentifier, Texture* aTexture);
-void AddonCompassShortcut();
 
 void AddonLoad(AddonAPI* aApi);
 void AddonUnload();
 void AddonRender();
 void AddonOptions();
+
+void LoadSettings();
+void SaveSettings();
 
 // little helper function for compass render
 std::string GetMarkerText(int aRotation, bool notch = true);
@@ -25,7 +35,12 @@ std::string GetMarkerText(int aRotation, bool notch = true);
 HMODULE hSelf;
 
 AddonAPI* APIDefs;
-AddonDefinition* AddonDef;
+AddonDefinition AddonDef{};
+
+std::mutex Mutex;
+json Settings = json::object();
+std::filesystem::path AddonPath;
+std::filesystem::path SettingsPath;
 
 bool IsCompassStripVisible = true;
 bool IsWorldCompassVisible = true;
@@ -44,11 +59,12 @@ float padding = 5.0f;
 
 ImVec2 CompassStripPosition = ImVec2(0, 0);
 
+const char* IS_COMPASS_STRIP_VISIBLE = "IsCompassStripVisible";
+const char* IS_COMPASS_WORLD_VISIBLE = "IsCompassWorldVisible";
 const char* COMPASS_TOGGLEVIS = "KB_COMPASS_TOGGLEVIS";
 const char* WINDOW_RESIZED = "EV_WINDOW_RESIZED";
 const char* MUMBLE_IDENITY_UPDATED = "EV_MUMBLE_IDENTITY_UPDATED";
 const char* HR_TEX = "TEX_SEPARATOR_DETAIL";
-const char* NLINK_NAME = "DL_NEXUS_LINK";
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -62,27 +78,26 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	return TRUE;
 }
 
-extern "C" __declspec(dllexport) AddonDefinition * GetAddonDef()
+extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 {
-	AddonDef = new AddonDefinition();
-	AddonDef->Signature = 17;
-	AddonDef->APIVersion = NEXUS_API_VERSION;
-	AddonDef->Name = "World Compass";
-	AddonDef->Version.Major = 1;
-	AddonDef->Version.Minor = 0;
-	AddonDef->Version.Build = 0;
-	AddonDef->Version.Revision = 1;
-	AddonDef->Author = "Raidcore";
-	AddonDef->Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
-	AddonDef->Load = AddonLoad;
-	AddonDef->Unload = AddonUnload;
-	AddonDef->Flags = EAddonFlags_None;
+	AddonDef.Signature = 17;
+	AddonDef.APIVersion = NEXUS_API_VERSION;
+	AddonDef.Name = "Compass";
+	AddonDef.Version.Major = 0;
+	AddonDef.Version.Minor = 9;
+	AddonDef.Version.Build = 1;
+	AddonDef.Version.Revision = 0;
+	AddonDef.Author = "Raidcore";
+	AddonDef.Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
+	AddonDef.Load = AddonLoad;
+	AddonDef.Unload = AddonUnload;
+	AddonDef.Flags = EAddonFlags_None;
 
 	/* not necessary if hosted on Raidcore, but shown anyway for the example also useful as a backup resource */
-	AddonDef->Provider = EUpdateProvider_GitHub;
-	AddonDef->UpdateLink = "https://github.com/RaidcoreGG/GW2-Compass";
+	AddonDef.Provider = EUpdateProvider_GitHub;
+	AddonDef.UpdateLink = "https://github.com/RaidcoreGG/GW2-Compass";
 
-	return AddonDef;
+	return &AddonDef;
 }
 
 void AddonLoad(AddonAPI* aApi)
@@ -92,35 +107,75 @@ void AddonLoad(AddonAPI* aApi)
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource("DL_MUMBLE_LINK");
+	NexusLink = (NexusLinkData*)APIDefs->GetResource("DL_NEXUS_LINK");
 
-	NexusLink = (NexusLinkData*)APIDefs->GetResource(NLINK_NAME);
-
-	APIDefs->RegisterKeybindWithString(COMPASS_TOGGLEVIS, ProcessKeybind, "CTRL+C");
+	APIDefs->RegisterKeybindWithString(COMPASS_TOGGLEVIS, ProcessKeybind, "(null)");
 
 	APIDefs->SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 
 	APIDefs->LoadTextureFromResource(HR_TEX, IDB_PNG1, hSelf, ReceiveTexture);
 
-	APIDefs->AddSimpleShortcut("QAS_COMPASS", AddonCompassShortcut);
-	//APIDefs.AddShortcut("QA_COMPASS", "ICON_GENERIC", "ICON_GENERIC_HOVER", "KB_COMPASS_TOGGLEVIS", "pee pee poo poo");
+	APIDefs->AddSimpleShortcut("QAS_COMPASS", AddonOptions);
 
 	APIDefs->RegisterRender(ERenderType_Render, AddonRender);
 	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptions);
 
-	APIDefs->Log(ELogLevel_DEBUG, "Compass addon loaded.");
+	AddonPath = APIDefs->GetAddonDirectory("Compass");
+	SettingsPath = APIDefs->GetAddonDirectory("Compass/settings.json");
 
-	OnWindowResized(nullptr);
+	std::filesystem::create_directory(AddonPath);
+
+	OnWindowResized(nullptr); // initialise self
+
+	LoadSettings();
 }
-
 void AddonUnload()
 {
-	/* release keybinds */
-	//APIDefs.UnregisterKeybind(COMPASS_TOGGLEVIS);
-
-	/* release events */
-	//APIDefs.UnsubscribeEvent(WINDOW_RESIZED, OnWindowResized);
-
 	APIDefs->UnregisterRender(AddonOptions);
+	APIDefs->UnregisterRender(AddonRender);
+
+	APIDefs->RemoveSimpleShortcut("QAS_COMPASS");
+
+	// textures do not have to be freed
+
+	APIDefs->UnsubscribeEvent(WINDOW_RESIZED, OnWindowResized);
+
+	APIDefs->UnregisterKeybind(COMPASS_TOGGLEVIS);
+
+	MumbleLink = nullptr;
+	NexusLink = nullptr;
+
+	SaveSettings();
+}
+
+void LoadSettings()
+{
+	if (!std::filesystem::exists(SettingsPath)) { return; }
+
+	const std::lock_guard<std::mutex> lock(Mutex);
+	{
+		std::ifstream file(SettingsPath);
+		Settings = json::parse(file);
+		file.close();
+	}
+
+	if (!Settings[IS_COMPASS_STRIP_VISIBLE].is_null())
+	{
+		IsCompassStripVisible = Settings[IS_COMPASS_STRIP_VISIBLE].get<bool>();
+	}
+	if (!Settings[IS_COMPASS_WORLD_VISIBLE].is_null())
+	{
+		IsWorldCompassVisible = Settings[IS_COMPASS_WORLD_VISIBLE].get<bool>();
+	}
+}
+void SaveSettings()
+{
+	const std::lock_guard<std::mutex> lock(Mutex);
+	{
+		std::ofstream file(SettingsPath);
+		file << Settings.dump(1, '\t') << std::endl;
+		file.close();
+	}
 }
 
 void AddonRender()
@@ -251,16 +306,13 @@ void AddonRender()
 
 void AddonOptions()
 {
-	ImGui::Separator();
-	ImGui::TextDisabled("Compass addon");
-	ImGui::Checkbox("Compass Strip", &IsCompassStripVisible);
-	ImGui::Checkbox("Compass World", &IsWorldCompassVisible);
-}
-
-void AddonCompassShortcut()
-{
-	ImGui::Checkbox("Compass Strip", &IsCompassStripVisible);
-	ImGui::Checkbox("Compass World", &IsWorldCompassVisible);
+	ImGui::TextDisabled("Compass");
+	if (ImGui::Checkbox("Compass Strip", &IsCompassStripVisible))
+	{
+		Settings[IS_COMPASS_STRIP_VISIBLE] = IsCompassStripVisible;
+		SaveSettings();
+	}
+	//ImGui::Checkbox("Compass World", &IsWorldCompassVisible);
 }
 
 void ProcessKeybind(const char* aIdentifier)
