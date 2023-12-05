@@ -25,6 +25,7 @@ void AddonLoad(AddonAPI* aApi);
 void AddonUnload();
 void AddonRender();
 void AddonOptions();
+void AddonShortcut();
 
 void LoadSettings();
 void SaveSettings();
@@ -43,7 +44,8 @@ std::filesystem::path AddonPath;
 std::filesystem::path SettingsPath;
 
 bool IsCompassStripVisible = true;
-bool IsWorldCompassVisible = true;
+float CompassStripOffsetV = 0.0f;
+bool IsCompassWorldVisible = true;
 Mumble::Data* MumbleLink = nullptr;
 Mumble::Identity* MumbleIdentity = nullptr;
 NexusLinkData* NexusLink = nullptr;
@@ -60,6 +62,7 @@ float padding = 5.0f;
 ImVec2 CompassStripPosition = ImVec2(0, 0);
 
 const char* IS_COMPASS_STRIP_VISIBLE = "IsCompassStripVisible";
+const char* COMPASS_STRIP_OFFSET_V = "CompassStripOffsetV";
 const char* IS_COMPASS_WORLD_VISIBLE = "IsCompassWorldVisible";
 const char* COMPASS_TOGGLEVIS = "KB_COMPASS_TOGGLEVIS";
 const char* WINDOW_RESIZED = "EV_WINDOW_RESIZED";
@@ -85,7 +88,7 @@ extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 	AddonDef.Name = "Compass";
 	AddonDef.Version.Major = 0;
 	AddonDef.Version.Minor = 9;
-	AddonDef.Version.Build = 1;
+	AddonDef.Version.Build = 2;
 	AddonDef.Version.Revision = 0;
 	AddonDef.Author = "Raidcore";
 	AddonDef.Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
@@ -115,7 +118,7 @@ void AddonLoad(AddonAPI* aApi)
 
 	APIDefs->LoadTextureFromResource(HR_TEX, IDB_PNG1, hSelf, ReceiveTexture);
 
-	APIDefs->AddSimpleShortcut("QAS_COMPASS", AddonOptions);
+	APIDefs->AddSimpleShortcut("QAS_COMPASS", AddonShortcut);
 
 	APIDefs->RegisterRender(ERenderType_Render, AddonRender);
 	APIDefs->RegisterRender(ERenderType_OptionsRender, AddonOptions);
@@ -125,9 +128,9 @@ void AddonLoad(AddonAPI* aApi)
 
 	std::filesystem::create_directory(AddonPath);
 
-	OnWindowResized(nullptr); // initialise self
-
 	LoadSettings();
+
+	OnWindowResized(nullptr); // initialise self
 }
 void AddonUnload()
 {
@@ -163,9 +166,13 @@ void LoadSettings()
 	{
 		IsCompassStripVisible = Settings[IS_COMPASS_STRIP_VISIBLE].get<bool>();
 	}
+	if (!Settings[COMPASS_STRIP_OFFSET_V].is_null())
+	{
+		CompassStripOffsetV = Settings[COMPASS_STRIP_OFFSET_V].get<float>();
+	}
 	if (!Settings[IS_COMPASS_WORLD_VISIBLE].is_null())
 	{
-		IsWorldCompassVisible = Settings[IS_COMPASS_WORLD_VISIBLE].get<bool>();
+		IsCompassWorldVisible = Settings[IS_COMPASS_WORLD_VISIBLE].get<bool>();
 	}
 }
 void SaveSettings()
@@ -307,12 +314,28 @@ void AddonRender()
 void AddonOptions()
 {
 	ImGui::TextDisabled("Compass");
-	if (ImGui::Checkbox("Compass Strip", &IsCompassStripVisible))
+	if (ImGui::Checkbox("UI Widget", &IsCompassStripVisible))
 	{
 		Settings[IS_COMPASS_STRIP_VISIBLE] = IsCompassStripVisible;
 		SaveSettings();
 	}
+	if (ImGui::DragFloat("UI Widget Vertical Offset", &CompassStripOffsetV, 1.0f, NexusLink->Height * -1.0f, NexusLink->Height * 1.0f))
+	{
+		Settings[COMPASS_STRIP_OFFSET_V] = CompassStripOffsetV;
+		OnWindowResized(nullptr);
+		SaveSettings();
+	}
 	//ImGui::Checkbox("Compass World", &IsWorldCompassVisible);
+}
+
+void AddonShortcut()
+{
+	ImGui::TextDisabled("Compass");
+	if (ImGui::Checkbox("UI Widget", &IsCompassStripVisible))
+	{
+		Settings[IS_COMPASS_STRIP_VISIBLE] = IsCompassStripVisible;
+		SaveSettings();
+	}
 }
 
 void ProcessKeybind(const char* aIdentifier)
@@ -329,7 +352,7 @@ void ProcessKeybind(const char* aIdentifier)
 void OnWindowResized(void* aEventArgs)
 {
 	/* event args are nullptr, ignore */
-	CompassStripPosition = ImVec2((NexusLink->Width - widgetWidth) / 2, NexusLink->Height * .2f);
+	CompassStripPosition = ImVec2((NexusLink->Width - widgetWidth) / 2, (NexusLink->Height * .2f) + CompassStripOffsetV);
 }
 
 void ReceiveTexture(const char* aIdentifier, Texture* aTexture)
