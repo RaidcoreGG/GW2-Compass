@@ -15,6 +15,9 @@
 #include "mumble/Mumble.h"
 
 #include "nlohmann/json.hpp"
+
+#include "globals.h"
+#include "render3D.h"
 using nlohmann::json;
 
 void ProcessKeybind(const char* aIdentifier);
@@ -50,6 +53,12 @@ Mumble::Data* MumbleLink = nullptr;
 Mumble::Identity* MumbleIdentity = nullptr;
 NexusLinkData* NexusLink = nullptr;
 
+// DX11
+IDXGISwapChain* swapChain = nullptr;
+ID3D11Device* device = nullptr;
+ID3D11DeviceContext* deviceContext = nullptr;
+DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
+
 Texture* hrTex = nullptr;
 
 float widgetWidth = 600.0f;
@@ -68,6 +77,12 @@ const char* COMPASS_TOGGLEVIS = "KB_COMPASS_TOGGLEVIS";
 const char* WINDOW_RESIZED = "EV_WINDOW_RESIZED";
 const char* MUMBLE_IDENITY_UPDATED = "EV_MUMBLE_IDENTITY_UPDATED";
 const char* HR_TEX = "TEX_SEPARATOR_DETAIL";
+
+void OnMumbleIdentityUpdate(void* aEventArgs)
+{
+	/* aEventArgs is a pointer to MumbleIdentity */
+	Mumble::Identity* identity = (Mumble::Identity*)aEventArgs;
+}
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -111,6 +126,14 @@ void AddonLoad(AddonAPI* aApi)
 
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource("DL_MUMBLE_LINK");
 	NexusLink = (NexusLinkData*)APIDefs->GetResource("DL_NEXUS_LINK");
+	APIDefs->SubscribeEvent("EV_MUMBLE_IDENTITY_UPDATED", OnMumbleIdentityUpdate);
+
+	// DirectX 11
+	swapChain = APIDefs->SwapChain;
+	swapChain->GetDevice(__uuidof(ID3D11Device), (void**)&device);
+	device->GetImmediateContext(&deviceContext);
+	swapChain->GetDesc(&swapChainDesc);
+
 
 	APIDefs->RegisterKeybindWithString(COMPASS_TOGGLEVIS, ProcessKeybind, "(null)");
 
@@ -188,6 +211,8 @@ void SaveSettings()
 void AddonRender()
 {
 	if (!IsCompassStripVisible || !NexusLink->IsGameplay) { return; }
+
+	draw_cube();
 
 	ImGuiIO& io = ImGui::GetIO();
 

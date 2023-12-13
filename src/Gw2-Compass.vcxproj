@@ -204,6 +204,7 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="globals.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_extensions.h" />
@@ -214,6 +215,7 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClInclude Include="mumble\Mumble.h" />
     <ClInclude Include="nexus\Nexus.h" />
     <ClInclude Include="nlohmann\json.hpp" />
+    <ClInclude Include="render3D.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Version.h" />
   </ItemGroup>
@@ -224,6 +226,7 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="render3D.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Compass.rc" />

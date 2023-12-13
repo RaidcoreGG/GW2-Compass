@@ -54,6 +54,12 @@
     <ClInclude Include="nlohmann\json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="render3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entry.cpp">
@@ -73,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="imgui\imgui.cpp">
       <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="render3D.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
