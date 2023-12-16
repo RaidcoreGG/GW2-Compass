@@ -38,7 +38,7 @@ std::string GetMarkerText(int aRotation, bool notch = true);
 
 HMODULE hSelf;
 
-AddonAPI* APIDefs;
+AddonAPI* APIDefs = nullptr;
 AddonDefinition AddonDef{};
 
 std::mutex Mutex;

@@ -4,6 +4,8 @@
 #include "nexus/Nexus.h"
 #include "mumble/Mumble.h"
 
+extern AddonAPI* APIDefs;
+
 extern Mumble::Data* MumbleLink;
 extern NexusLinkData* NexusLink;
 extern Mumble::Identity* identity;
