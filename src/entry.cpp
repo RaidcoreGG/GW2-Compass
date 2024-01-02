@@ -89,7 +89,7 @@ extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 	AddonDef.Version.Major = 0;
 	AddonDef.Version.Minor = 9;
 	AddonDef.Version.Build = 2;
-	AddonDef.Version.Revision = 0;
+	AddonDef.Version.Revision = 1;
 	AddonDef.Author = "Raidcore";
 	AddonDef.Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
 	AddonDef.Load = AddonLoad;
@@ -197,7 +197,7 @@ void AddonRender()
 	/* set width and position */
 	ImGui::PushItemWidth(widgetWidth);
 	ImGui::SetNextWindowPos(CompassStripPosition);
-	if (ImGui::Begin("COMPASS_STRIP", (bool*)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus))
+	if (ImGui::Begin("COMPASS_STRIP", (bool*)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar))
 	{
 		float offsetTop = 0.0f;
 
