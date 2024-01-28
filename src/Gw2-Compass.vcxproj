@@ -269,6 +269,8 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClInclude Include="nexus\Nexus.h" />
     <ClInclude Include="nlohmann\json.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="Shared.h" />
     <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
@@ -278,6 +280,8 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="Shared.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="GW2-Compass.rc" />
