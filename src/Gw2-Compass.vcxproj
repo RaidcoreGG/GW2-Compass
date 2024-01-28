@@ -133,30 +133,18 @@ WMIC.EXE Alias /? &gt;NUL 2&gt;&amp;1 || GOTO s_error
 FOR /F "skip=1 tokens=1-6" %%G IN ('WMIC Path Win32_LocalTime Get Day^,Hour^,Minute^,Month^,Second^,Year /Format:table') DO (
    IF "%%~L"=="" goto s_done
       Set _yyyy=%%L
-      Set _mm=00%%J
-      Set _dd=00%%G
-      Set _hour=00%%H
-      SET _minute=00%%I
+      Set _mm=%%J
+      Set _dd=%%G
+      Set _hour=%%H
+      SET _minute=%%I
 )
 :s_done
 
-:: Pad digits with leading zeros
-      Set _mm=%_mm:~-2%
-      Set _dd=%_dd:~-2%
-      Set _hour=%_hour:~-2%
-      Set _minute=%_minute:~-2%
-
-:: Display the date/time in ISO 8601 format:
-Set _isodate=%_yyyy%-%_mm%-%_dd% %_hour%:%_minute%
-Echo %_isodate%
-
 echo #pragma once &gt; Version.h
-echo #define V_MAJOR %_isodate:~0,4% &gt;&gt; Version.h
-echo #define V_MINOR %_isodate:~5,2% &gt;&gt; Version.h
-echo #define V_BUILD %_isodate:~8,2% &gt;&gt; Version.h
-SET /A var_hours = %_isodate:~11,2%
-SET /A var_minutes = %_isodate:~14,2%
-SET /A var_res = %var_hours% * 60 + %var_minutes%
+echo #define V_MAJOR %_yyyy% &gt;&gt; Version.h
+echo #define V_MINOR %_mm% &gt;&gt; Version.h
+echo #define V_BUILD %_dd% &gt;&gt; Version.h
+SET /A var_res = %_hour% * 60 + %_minute%
 echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
@@ -215,7 +203,6 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClInclude Include="nexus\Nexus.h" />
     <ClInclude Include="nlohmann\json.hpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entry.cpp" />
