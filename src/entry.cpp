@@ -86,10 +86,10 @@ extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 	AddonDef.Signature = 17;
 	AddonDef.APIVersion = NEXUS_API_VERSION;
 	AddonDef.Name = "Compass";
-	AddonDef.Version.Major = 0;
-	AddonDef.Version.Minor = 9;
-	AddonDef.Version.Build = 2;
-	AddonDef.Version.Revision = 1;
+	AddonDef.Version.Major = V_MAJOR;
+	AddonDef.Version.Minor = V_MINOR;
+	AddonDef.Version.Build = V_BUILD;
+	AddonDef.Version.Revision = V_REVISION;
 	AddonDef.Author = "Raidcore";
 	AddonDef.Description = "Adds a simple compass widget to the UI, as well as to your character in the world.";
 	AddonDef.Load = AddonLoad;

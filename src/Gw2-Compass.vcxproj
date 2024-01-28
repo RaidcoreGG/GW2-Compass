@@ -107,6 +107,28 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PreBuildEvent>
+      <Command>:: Check WMIC is available
+WMIC.EXE Alias /? &gt;NUL 2&gt;&amp;1 || GOTO s_error
+
+:: Use WMIC to retrieve date and time
+FOR /F "skip=1 tokens=1-6" %%G IN ('WMIC Path Win32_LocalTime Get Day^,Hour^,Minute^,Month^,Second^,Year /Format:table') DO (
+   IF "%%~L"=="" goto s_done
+      Set _yyyy=%%L
+      Set _mm=%%J
+      Set _dd=%%G
+      Set _hour=%%H
+      SET _minute=%%I
+)
+:s_done
+
+echo #pragma once &gt; Version.h
+echo #define V_MAJOR %_yyyy% &gt;&gt; Version.h
+echo #define V_MINOR %_mm% &gt;&gt; Version.h
+echo #define V_BUILD %_dd% &gt;&gt; Version.h
+SET /A var_res = %_hour% * 60 + %_minute%
+echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -168,6 +190,28 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PreBuildEvent>
+      <Command>:: Check WMIC is available
+WMIC.EXE Alias /? &gt;NUL 2&gt;&amp;1 || GOTO s_error
+
+:: Use WMIC to retrieve date and time
+FOR /F "skip=1 tokens=1-6" %%G IN ('WMIC Path Win32_LocalTime Get Day^,Hour^,Minute^,Month^,Second^,Year /Format:table') DO (
+   IF "%%~L"=="" goto s_done
+      Set _yyyy=%%L
+      Set _mm=%%J
+      Set _dd=%%G
+      Set _hour=%%H
+      SET _minute=%%I
+)
+:s_done
+
+echo #pragma once &gt; Version.h
+echo #define V_MAJOR %_yyyy% &gt;&gt; Version.h
+echo #define V_MINOR %_mm% &gt;&gt; Version.h
+echo #define V_BUILD %_dd% &gt;&gt; Version.h
+SET /A var_res = %_hour% * 60 + %_minute%
+echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -190,6 +234,28 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <PreBuildEvent>
+      <Command>:: Check WMIC is available
+WMIC.EXE Alias /? &gt;NUL 2&gt;&amp;1 || GOTO s_error
+
+:: Use WMIC to retrieve date and time
+FOR /F "skip=1 tokens=1-6" %%G IN ('WMIC Path Win32_LocalTime Get Day^,Hour^,Minute^,Month^,Second^,Year /Format:table') DO (
+   IF "%%~L"=="" goto s_done
+      Set _yyyy=%%L
+      Set _mm=%%J
+      Set _dd=%%G
+      Set _hour=%%H
+      SET _minute=%%I
+)
+:s_done
+
+echo #pragma once &gt; Version.h
+echo #define V_MAJOR %_yyyy% &gt;&gt; Version.h
+echo #define V_MINOR %_mm% &gt;&gt; Version.h
+echo #define V_BUILD %_dd% &gt;&gt; Version.h
+SET /A var_res = %_hour% * 60 + %_minute%
+echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h" />
@@ -203,6 +269,7 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClInclude Include="nexus\Nexus.h" />
     <ClInclude Include="nlohmann\json.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Version.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="entry.cpp" />
