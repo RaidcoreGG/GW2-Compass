@@ -84,7 +84,7 @@ extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 void AddonLoad(AddonAPI* aApi)
 {
 	APIDefs = aApi;
-	ImGui::SetCurrentContext(APIDefs->ImguiContext);
+	ImGui::SetCurrentContext((ImGuiContext*)APIDefs->ImguiContext);
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource("DL_MUMBLE_LINK");
@@ -110,8 +110,8 @@ void AddonLoad(AddonAPI* aApi)
 }
 void AddonUnload()
 {
-	APIDefs->UnregisterRender(AddonOptions);
-	APIDefs->UnregisterRender(AddonRender);
+	APIDefs->DeregisterRender(AddonOptions);
+	APIDefs->DeregisterRender(AddonRender);
 
 	APIDefs->RemoveSimpleShortcut("QAS_COMPASS");
 
@@ -119,7 +119,7 @@ void AddonUnload()
 
 	APIDefs->UnsubscribeEvent(WINDOW_RESIZED, OnWindowResized);
 
-	APIDefs->UnregisterKeybind(COMPASS_TOGGLEVIS);
+	APIDefs->DeregisterKeybind(COMPASS_TOGGLEVIS);
 
 	MumbleLink = nullptr;
 	NexusLink = nullptr;
@@ -140,7 +140,7 @@ void AddonRender()
 		ImGuiIO& io = ImGui::GetIO();
 
 		/* use Menomonia */
-		ImGui::PushFont(NexusLink->Font);
+		ImGui::PushFont((ImFont*)NexusLink->Font);
 
 		/* set width and position */
 		ImGui::PushItemWidth(Settings::WidgetWidth);
@@ -165,7 +165,7 @@ void AddonRender()
 			}
 
 			/* use Menomonia but bigger */
-			ImGui::PushFont(NexusLink->FontBig);
+			ImGui::PushFont((ImFont*)NexusLink->FontBig);
 
 			/* center scope */
 			/* logic, the draw point for the scope is the center of the widget minus half of the center text size */
@@ -347,10 +347,14 @@ void AddonOptions()
 
 void AddonShortcut()
 {
-	ImGui::TextDisabled("Compass");
-	if (ImGui::Checkbox("UI Widget", &Settings::IsWidgetEnabled))
+	if (ImGui::Checkbox("Widget", &Settings::IsWidgetEnabled))
 	{
 		Settings::Settings[IS_COMPASS_STRIP_VISIBLE] = Settings::IsWidgetEnabled;
+		Settings::Save(SettingsPath);
+	}
+	if (ImGui::Checkbox("Indicator", &Settings::IsIndicatorEnabled))
+	{
+		Settings::Settings[IS_COMPASS_INDICATOR_VISIBLE] = Settings::IsIndicatorEnabled;
 		Settings::Save(SettingsPath);
 	}
 }
