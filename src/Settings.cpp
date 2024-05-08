@@ -8,6 +8,7 @@
 const char* IS_COMPASS_STRIP_VISIBLE = "IsCompassStripVisible";
 const char* COMPASS_STRIP_OFFSET_V = "CompassStripOffsetV";
 const char* IS_COMPASS_WORLD_VISIBLE = "IsCompassWorldVisible";
+const char* WORLD_FADE_OUT_CAMERA_DIRECTION = "WorldFadeOutCameraDirection";
 const char* IS_COMPASS_INDICATOR_VISIBLE = "IsCompassIndicatorVisible";
 const char* IS_COMPASS_INDICATOR_LOCKED	= "IsCompassIndicatorLocked";
 const char* COMPASS_INDICATOR_TEXT_PREFIX = "CompassIndicatorTextPrefix";
@@ -108,6 +109,7 @@ namespace Settings
 
 	/* World/Agent */
 	bool IsAgentEnabled = true;
+	bool FadeOutCameraDirection = true;
 
 	/* Indicator */
 	bool IsIndicatorEnabled = false;

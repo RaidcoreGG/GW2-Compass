@@ -8,7 +8,9 @@ using json = nlohmann::json;
 
 extern const char* IS_COMPASS_STRIP_VISIBLE;
 extern const char* COMPASS_STRIP_OFFSET_V;
+
 extern const char* IS_COMPASS_WORLD_VISIBLE;
+extern const char* WORLD_FADE_OUT_CAMERA_DIRECTION;
 
 extern const char* IS_COMPASS_INDICATOR_VISIBLE;
 extern const char* IS_COMPASS_INDICATOR_LOCKED;
@@ -41,6 +43,7 @@ namespace Settings
 
 	/* World/Agent */
 	extern bool IsAgentEnabled;
+	extern bool FadeOutCameraDirection;
 
 	/* Indicator */
 	extern bool IsIndicatorEnabled;

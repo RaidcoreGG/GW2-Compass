@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <mutex>
 #include <fstream>
+#include <DirectXMath.h>
 
 #include "Shared.h"
 #include "Settings.h"
@@ -15,8 +16,11 @@
 #include "imgui/imgui_extensions.h"
 #include "resource.h"
 
+namespace dx = DirectX;
+
 void ProcessKeybind(const char* aIdentifier);
 void OnWindowResized(void* aEventArgs);
+void OnMumbleIdentityUpdated(void* aEventArgs);
 void ReceiveTexture(const char* aIdentifier, Texture* aTexture);
 
 void AddonLoad(AddonAPI* aApi);
@@ -44,7 +48,7 @@ ImVec2 CompassStripPosition = ImVec2(0, 0);
 
 const char* COMPASS_TOGGLEVIS = "KB_COMPASS_TOGGLEVIS";
 const char* WINDOW_RESIZED = "EV_WINDOW_RESIZED";
-const char* MUMBLE_IDENITY_UPDATED = "EV_MUMBLE_IDENTITY_UPDATED";
+const char* MUMBLE_IDENTITY_UPDATED = "EV_MUMBLE_IDENTITY_UPDATED";
 const char* HR_TEX = "TEX_SEPARATOR_DETAIL";
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
@@ -93,6 +97,7 @@ void AddonLoad(AddonAPI* aApi)
 	APIDefs->RegisterKeybindWithString(COMPASS_TOGGLEVIS, ProcessKeybind, "(null)");
 
 	APIDefs->SubscribeEvent(WINDOW_RESIZED, OnWindowResized);
+	APIDefs->SubscribeEvent(MUMBLE_IDENTITY_UPDATED, OnMumbleIdentityUpdated);
 
 	APIDefs->LoadTextureFromResource(HR_TEX, IDB_PNG1, hSelf, ReceiveTexture);
 
@@ -127,13 +132,109 @@ void AddonUnload()
 	Settings::Save(SettingsPath);
 }
 
+std::vector<Vector3> av_interp;
+std::vector<Vector3> avf_interp;
+
+Vector3 Average(std::vector<Vector3> aVectors)
+{
+	Vector3 avg{};
+	for (size_t i = 0; i < aVectors.size(); i++)
+	{
+		avg.X += aVectors[i].X;
+		avg.Y += aVectors[i].Y;
+		avg.Z += aVectors[i].Z;
+	}
+
+	avg.X /= aVectors.size();
+	avg.Y /= aVectors.size();
+	avg.Z /= aVectors.size();
+
+	return avg;
+}
+
+constexpr float r = 24 * 2.54f / 100;
+constexpr float deg = 360.0f / 200;
+
 void AddonRender()
 {
-	if (!NexusLink->IsGameplay) { return; }
-
+	if (!NexusLink || !MumbleLink|| !MumbleIdentity || !NexusLink->IsGameplay) { return; }
+	
 	/* get rotation in float for accuracy and int for display */
 	float fRot = atan2f(MumbleLink->CameraFront.X, MumbleLink->CameraFront.Z) * 180.0f / 3.14159f;
 	int iRot = round(fRot);
+
+	if (Settings::IsAgentEnabled)
+	{
+		Vector3 cameraFacing = MumbleLink->CameraFront;
+		Vector3 camera = MumbleLink->CameraPosition;
+
+		av_interp.push_back(MumbleLink->AvatarPosition);
+		avf_interp.push_back(MumbleLink->AvatarFront);
+		if (av_interp.size() < 15) { return; }
+		av_interp.erase(av_interp.begin());
+		avf_interp.erase(avf_interp.begin());
+
+		Vector3 av = Average(av_interp);
+		Vector3 av_facing = Average(avf_interp);
+
+		Vector3 origin = av;
+
+		float deltaAvCam = sqrt((camera.X - origin.X) * (camera.X - origin.X) +
+			(camera.Y - origin.Y) * (camera.Y - origin.Y) +
+			(camera.Z - origin.Z) * (camera.Z - origin.Z));
+
+		bool cull = false;
+
+		if (deltaAvCam < 2.5f && cameraFacing.Y > -0.5f) { cull = true; }
+
+		float facingDeg = atan2f(av_facing.X, av_facing.Z) * 180.0f / 3.14159f;
+
+		Vector3 north = { r * 2 * sin(0.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(0.0f * 3.14159f / 180.0f) + origin.Z };
+		Vector3 east = { r * 2 * sin(90.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(90.0f * 3.14159f / 180.0f) + origin.Z };
+		Vector3 south = { r * 2 * sin(180.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(180.0f * 3.14159f / 180.0f) + origin.Z };
+		Vector3 west = { r * 2 * sin(270.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(270.0f * 3.14159f / 180.0f) + origin.Z };
+
+		dx::XMVECTOR vCamPos = { MumbleLink->CameraPosition.X, MumbleLink->CameraPosition.Y, MumbleLink->CameraPosition.Z };
+		dx::XMVECTOR vCamFront = { MumbleLink->CameraFront.X, MumbleLink->CameraFront.Y, MumbleLink->CameraFront.Z };
+
+		dx::XMVECTOR lookAtPosition = dx::XMVectorAdd(vCamPos, vCamFront);
+		dx::XMMATRIX matView = dx::XMMatrixLookAtLH(vCamPos, lookAtPosition, { 0, 1.0f, 0 });
+		dx::XMMATRIX matProj = dx::XMMatrixPerspectiveFovLH(MumbleIdentity->FOV, (float)NexusLink->Width / (float)NexusLink->Height, 1.0f, 10000.0f);
+
+		dx::XMMATRIX matWorld = dx::XMMatrixIdentity();
+
+		ImDrawList* dl = ImGui::GetBackgroundDrawList();
+
+		dx::XMVECTOR northProj = dx::XMVector3Project({ north.X, north.Y, north.Z }, 0, 0, NexusLink->Width, NexusLink->Height, 1.0f, 10000.0f, matProj, matView, matWorld);
+		dx::XMVECTOR eastProj = dx::XMVector3Project({ east.X, east.Y, east.Z }, 0, 0, NexusLink->Width, NexusLink->Height, 1.0f, 10000.0f, matProj, matView, matWorld);
+		dx::XMVECTOR southProj = dx::XMVector3Project({ south.X, south.Y, south.Z }, 0, 0, NexusLink->Width, NexusLink->Height, 1.0f, 10000.0f, matProj, matView, matWorld);
+		dx::XMVECTOR westProj = dx::XMVector3Project({ west.X, west.Y, west.Z }, 0, 0, NexusLink->Width, NexusLink->Height, 1.0f, 10000.0f, matProj, matView, matWorld);
+
+		/* two passes for black first "shadow" then white for actual lines */
+
+		ImGui::PushFont((ImFont*)NexusLink->FontBig);
+		float fontSize = ImGui::GetFontSize();
+		ImGui::PopFont();
+
+		ImVec2 nSize = ImGui::CalcTextSize("N");
+		ImVec2 eSize = ImGui::CalcTextSize("E");
+		ImVec2 sSize = ImGui::CalcTextSize("S");
+		ImVec2 wSize = ImGui::CalcTextSize("W");
+
+		float camRot = fRot;
+		if (camRot < 0.0f) { camRot += 360.0f; }
+		if (camRot == 0.0f) { camRot = 360.0f; }
+
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(northProj.m128_f32[0] - (nSize.x / 2) + 1.0f, northProj.m128_f32[1] - (nSize.y / 2) + 1.0f), ImColor(0, 0, 0, Settings::FadeOutCameraDirection ? (int)(abs(0.0f - fRot) / 45.0f * 255) : 255), "N");
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(eastProj.m128_f32[0] - (eSize.x / 2) + 1.0f, eastProj.m128_f32[1] - (eSize.y / 2) + 1.0f), ImColor(0, 0, 0, Settings::FadeOutCameraDirection ? (int)(abs(90.0f - camRot) / 45.0f * 255) : 255), "E");
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(southProj.m128_f32[0] - (sSize.x / 2) + 1.0f, southProj.m128_f32[1] - (sSize.y / 2) + 1.0f), ImColor(0, 0, 0, Settings::FadeOutCameraDirection ? (int)(abs(180.0f - camRot) / 45.0f * 255) : 255), "S");
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(westProj.m128_f32[0] - (wSize.x / 2) + 1.0f, westProj.m128_f32[1] - (wSize.y / 2) + 1.0f), ImColor(0, 0, 0, Settings::FadeOutCameraDirection ? (int)(abs(270.0f - camRot) / 45.0f * 255) : 255), "W");
+
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(northProj.m128_f32[0] - (nSize.x / 2), northProj.m128_f32[1] - (nSize.y / 2)), ImColor(255, 255, 255, Settings::FadeOutCameraDirection ? (int)(abs(0.0f - fRot) / 45.0f * 255) : 255), "N");
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(eastProj.m128_f32[0] - (eSize.x / 2), eastProj.m128_f32[1] - (eSize.y / 2)), ImColor(255, 255, 255, Settings::FadeOutCameraDirection ? (int)(abs(90.0f - camRot) / 45.0f * 255) : 255), "E");
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(southProj.m128_f32[0] - (sSize.x / 2), southProj.m128_f32[1] - (sSize.y / 2)), ImColor(255, 255, 255, Settings::FadeOutCameraDirection ? (int)(abs(180.0f - camRot) / 45.0f * 255) : 255), "S");
+		dl->AddText((ImFont*)NexusLink->FontBig, fontSize, ImVec2(westProj.m128_f32[0] - (wSize.x / 2), westProj.m128_f32[1] - (wSize.y / 2)), ImColor(255, 255, 255, Settings::FadeOutCameraDirection ? (int)(abs(270.0f - camRot) / 45.0f * 255) : 255), "W");
+	}
 
 	if (Settings::IsWidgetEnabled)
 	{
@@ -302,7 +403,17 @@ void AddonOptions()
 		Settings::Save(SettingsPath);
 	}
 
-	//ImGui::Checkbox("Compass World", &IsWorldCompassVisible);
+	ImGui::TextDisabled("World");
+	if (ImGui::Checkbox("Enabled##World", &Settings::IsAgentEnabled))
+	{
+		Settings::Settings[IS_COMPASS_WORLD_VISIBLE] = Settings::IsAgentEnabled;
+		Settings::Save(SettingsPath);
+	}
+	if (ImGui::Checkbox("Fade out camera direction##World", &Settings::FadeOutCameraDirection))
+	{
+		Settings::Settings[WORLD_FADE_OUT_CAMERA_DIRECTION] = Settings::FadeOutCameraDirection;
+		Settings::Save(SettingsPath);
+	}
 
 	ImGui::TextDisabled("Indicator");
 	if (ImGui::Checkbox("Enabled##Indicator", &Settings::IsIndicatorEnabled))
@@ -372,8 +483,12 @@ void ProcessKeybind(const char* aIdentifier)
 
 void OnWindowResized(void* aEventArgs)
 {
-	/* event args are nullptr, ignore */
 	CompassStripPosition = ImVec2((NexusLink->Width - Settings::WidgetWidth) / 2, (NexusLink->Height * .2f) + Settings::WidgetOffsetV);
+}
+
+void OnMumbleIdentityUpdated(void* aEventArgs)
+{
+	MumbleIdentity = (Mumble::Identity*)aEventArgs;
 }
 
 void ReceiveTexture(const char* aIdentifier, Texture* aTexture)

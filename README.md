@@ -14,6 +14,9 @@ Install via the [Nexus](https://raidcore.gg/Nexus) Addon Library or download the
 ## Widget
 ![](https://i.imgur.com/BWotAWD.png)
 
+## World
+![](https://i.imgur.com/36dJUUx.png)
+
 ## Indicator
 Short and long text  
 ![](https://i.imgur.com/T9g9l8T.png)
