@@ -463,6 +463,11 @@ void AddonShortcut()
 		Settings::Settings[IS_COMPASS_STRIP_VISIBLE] = Settings::IsWidgetEnabled;
 		Settings::Save(SettingsPath);
 	}
+	if (ImGui::Checkbox("World", &Settings::IsAgentEnabled))
+	{
+		Settings::Settings[IS_COMPASS_WORLD_VISIBLE] = Settings::IsAgentEnabled;
+		Settings::Save(SettingsPath);
+	}
 	if (ImGui::Checkbox("Indicator", &Settings::IsIndicatorEnabled))
 	{
 		Settings::Settings[IS_COMPASS_INDICATOR_VISIBLE] = Settings::IsIndicatorEnabled;
