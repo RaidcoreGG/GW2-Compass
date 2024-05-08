@@ -362,7 +362,7 @@ void AddonRender()
 	{
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.0f);
-		if (ImGui::Begin("COMPASS_INDICATOR", (bool*)0, (Settings::IsIndicatorLocked ? (ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs) : 0) | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar))
+		if (ImGui::Begin("COMPASS_INDICATOR", (bool*)0, (Settings::IsIndicatorLocked ? (ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs) : 0) | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			std::string outStr;
 			if (!Settings::IndicatorPrefix.empty())
