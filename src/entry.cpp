@@ -157,7 +157,7 @@ constexpr float deg = 360.0f / 200;
 
 void AddonRender()
 {
-	if (!NexusLink || !MumbleLink|| !MumbleIdentity || !NexusLink->IsGameplay) { return; }
+	if (!NexusLink || !MumbleLink|| !MumbleIdentity || MumbleLink->Context.IsMapOpen || !NexusLink->IsGameplay) { return; }
 	
 	/* get rotation in float for accuracy and int for display */
 	float fRot = atan2f(MumbleLink->CameraFront.X, MumbleLink->CameraFront.Z) * 180.0f / 3.14159f;
