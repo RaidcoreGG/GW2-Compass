@@ -244,9 +244,9 @@ void AddonRender()
 		ImGui::PushFont((ImFont*)NexusLink->Font);
 
 		/* set width and position */
-		ImGui::PushItemWidth(Settings::WidgetWidth);
+		//ImGui::PushItemWidth(Settings::WidgetWidth);
 		ImGui::SetNextWindowPos(CompassStripPosition);
-		if (ImGui::Begin("COMPASS_STRIP", (bool*)0, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar))
+		if (ImGui::Begin("COMPASS_STRIP", (bool*)0, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar))
 		{
 			float offsetTop = 0.0f;
 
