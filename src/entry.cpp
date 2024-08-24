@@ -152,7 +152,6 @@ Vector3 Average(std::vector<Vector3> aVectors)
 	return avg;
 }
 
-constexpr float r = 24 * 2.54f / 100;
 constexpr float deg = 360.0f / 200;
 
 void AddonRender()
@@ -189,10 +188,44 @@ void AddonRender()
 
 		float facingDeg = atan2f(av_facing.X, av_facing.Z) * 180.0f / 3.14159f;
 
-		Vector3 north = { r * 2 * sin(0.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(0.0f * 3.14159f / 180.0f) + origin.Z };
-		Vector3 east = { r * 2 * sin(90.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(90.0f * 3.14159f / 180.0f) + origin.Z };
-		Vector3 south = { r * 2 * sin(180.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(180.0f * 3.14159f / 180.0f) + origin.Z };
-		Vector3 west = { r * 2 * sin(270.0f * 3.14159f / 180.0f) + origin.X, origin.Y, r * 2 * cos(270.0f * 3.14159f / 180.0f) + origin.Z };
+		float radius = 24.0f; // normal player
+		if (Settings::ScaleWithHitbox)
+		{
+			switch (MumbleLink->Context.MountIndex)
+			{
+				case Mumble::EMountIndex::Raptor:
+				case Mumble::EMountIndex::Griffon:
+				case Mumble::EMountIndex::RollerBeetle:
+				case Mumble::EMountIndex::Skyscale:
+					radius = 60.0f;
+					break;
+
+				case Mumble::EMountIndex::Springer:
+				case Mumble::EMountIndex::Jackal:
+					radius = 50.0f;
+					break;
+
+				case Mumble::EMountIndex::Skimmer:
+					radius = 66.0f;
+					break;
+
+				case Mumble::EMountIndex::Warclaw:
+					radius = 40.0f;
+					break;
+
+				case Mumble::EMountIndex::SiegeTurtle:
+					radius = 80.0f;
+					break;
+			}
+		}
+		
+		radius += 24.0f;
+		radius *= 2.54f / 100; // convert inches to meters
+
+		Vector3 north = { radius * sin(0.0f * 3.14159f / 180.0f) + origin.X, origin.Y, radius * cos(0.0f * 3.14159f / 180.0f) + origin.Z };
+		Vector3 east = { radius * sin(90.0f * 3.14159f / 180.0f) + origin.X, origin.Y, radius * cos(90.0f * 3.14159f / 180.0f) + origin.Z };
+		Vector3 south = { radius * sin(180.0f * 3.14159f / 180.0f) + origin.X, origin.Y, radius * cos(180.0f * 3.14159f / 180.0f) + origin.Z };
+		Vector3 west = { radius * sin(270.0f * 3.14159f / 180.0f) + origin.X, origin.Y, radius * cos(270.0f * 3.14159f / 180.0f) + origin.Z };
 
 		dx::XMVECTOR vCamPos = { MumbleLink->CameraPosition.X, MumbleLink->CameraPosition.Y, MumbleLink->CameraPosition.Z };
 		dx::XMVECTOR vCamFront = { MumbleLink->CameraFront.X, MumbleLink->CameraFront.Y, MumbleLink->CameraFront.Z };
@@ -412,6 +445,11 @@ void AddonOptions()
 	if (ImGui::Checkbox("Fade out camera direction##World", &Settings::FadeOutCameraDirection))
 	{
 		Settings::Settings[WORLD_FADE_OUT_CAMERA_DIRECTION] = Settings::FadeOutCameraDirection;
+		Settings::Save(SettingsPath);
+	}
+	if (ImGui::Checkbox("Scale with Hitbox##World", &Settings::ScaleWithHitbox))
+	{
+		Settings::Settings[WORLD_SCALE_WITH_HITBOX] = Settings::ScaleWithHitbox;
 		Settings::Save(SettingsPath);
 	}
 

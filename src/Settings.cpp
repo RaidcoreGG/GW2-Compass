@@ -9,6 +9,7 @@ const char* IS_COMPASS_STRIP_VISIBLE = "IsCompassStripVisible";
 const char* COMPASS_STRIP_OFFSET_V = "CompassStripOffsetV";
 const char* IS_COMPASS_WORLD_VISIBLE = "IsCompassWorldVisible";
 const char* WORLD_FADE_OUT_CAMERA_DIRECTION = "WorldFadeOutCameraDirection";
+const char* WORLD_SCALE_WITH_HITBOX = "WorldScaleWithHitbox";
 const char* IS_COMPASS_INDICATOR_VISIBLE = "IsCompassIndicatorVisible";
 const char* IS_COMPASS_INDICATOR_LOCKED	= "IsCompassIndicatorLocked";
 const char* COMPASS_INDICATOR_TEXT_PREFIX = "CompassIndicatorTextPrefix";
@@ -58,6 +59,14 @@ namespace Settings
 		if (!Settings[IS_COMPASS_WORLD_VISIBLE].is_null())
 		{
 			Settings[IS_COMPASS_WORLD_VISIBLE].get_to<bool>(IsAgentEnabled);
+		}
+		if (!Settings[WORLD_FADE_OUT_CAMERA_DIRECTION].is_null())
+		{
+			Settings[WORLD_FADE_OUT_CAMERA_DIRECTION].get_to<bool>(FadeOutCameraDirection);
+		}
+		if (!Settings[WORLD_SCALE_WITH_HITBOX].is_null())
+		{
+			Settings[WORLD_SCALE_WITH_HITBOX].get_to<bool>(ScaleWithHitbox);
 		}
 
 		/* Indicator */
@@ -110,6 +119,7 @@ namespace Settings
 	/* World/Agent */
 	bool IsAgentEnabled = true;
 	bool FadeOutCameraDirection = true;
+	bool ScaleWithHitbox = true;
 
 	/* Indicator */
 	bool IsIndicatorEnabled = false;
