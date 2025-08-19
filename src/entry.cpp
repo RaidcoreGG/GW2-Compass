@@ -85,6 +85,25 @@ extern "C" __declspec(dllexport) AddonDefinition* GetAddonDef()
 	return &AddonDef;
 }
 
+void OnAddonLoaded(int* aSignature)
+{
+	if (!aSignature) { return; }
+
+	if (*aSignature == RTAPI_SIG)
+	{
+		RTAPIData = (RTAPI::RealTimeData*)APIDefs->GetResource(DL_RTAPI);
+	}
+}
+void OnAddonUnloaded(int* aSignature)
+{
+	if (!aSignature) { return; }
+
+	if (*aSignature == RTAPI_SIG)
+	{
+		RTAPIData = nullptr;
+	}
+}
+
 void AddonLoad(AddonAPI* aApi)
 {
 	APIDefs = aApi;
@@ -92,7 +111,9 @@ void AddonLoad(AddonAPI* aApi)
 	ImGui::SetAllocatorFunctions((void* (*)(size_t, void*))APIDefs->ImguiMalloc, (void(*)(void*, void*))APIDefs->ImguiFree); // on imgui 1.80+
 
 	MumbleLink = (Mumble::Data*)APIDefs->GetResource("DL_MUMBLE_LINK");
+	MumbleIdentity = (Mumble::Identity*)APIDefs->GetResource("DL_MUMBLE_LINK_IDENTITY");
 	NexusLink = (NexusLinkData*)APIDefs->GetResource("DL_NEXUS_LINK");
+	RTAPIData = (RTAPI::RealTimeData*)APIDefs->GetResource(DL_RTAPI);
 
 	APIDefs->RegisterKeybindWithString(COMPASS_TOGGLEVIS, ProcessKeybind, "(null)");
 
@@ -127,7 +148,9 @@ void AddonUnload()
 	APIDefs->DeregisterKeybind(COMPASS_TOGGLEVIS);
 
 	MumbleLink = nullptr;
+	MumbleIdentity = nullptr;
 	NexusLink = nullptr;
+	RTAPIData = nullptr;
 
 	Settings::Save(SettingsPath);
 }
@@ -177,6 +200,12 @@ void AddonRender()
 		Vector3 av_facing = Average(avf_interp);
 
 		Vector3 origin = av;
+
+		if (RTAPIData)
+		{
+			origin = *(Vector3*)&RTAPIData->CharacterPosition;
+			av_facing = *(Vector3*)&RTAPIData->CharacterFacing;
+		}
 
 		float deltaAvCam = sqrt((camera.X - origin.X) * (camera.X - origin.X) +
 			(camera.Y - origin.Y) * (camera.Y - origin.Y) +

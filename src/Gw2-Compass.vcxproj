@@ -273,6 +273,7 @@ echo #define V_REVISION %var_res% &gt;&gt; Version.h</Command>
     <ClInclude Include="nexus\Nexus.h" />
     <ClInclude Include="nlohmann\json.hpp" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="rtapi\RTAPI.hpp" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Shared.h" />
     <ClInclude Include="Version.h" />

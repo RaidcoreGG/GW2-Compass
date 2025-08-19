@@ -4,3 +4,6 @@
 [submodule "src/nexus"]
 	path = src/nexus
 	url = https://github.com/RaidcoreGG/RCGG-lib-nexus-api
+[submodule "src/rtapi"]
+	path = src/rtapi
+	url = https://github.com/RaidcoreGG/GW2-RealTime-API-Releases
